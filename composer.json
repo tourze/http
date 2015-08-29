@@ -10,6 +10,7 @@
     }
   ],
   "require": {
+    "psr/http-message": "^1.0",
     "tourze/core": "dev-master",
     "tourze/route": "dev-master"
   },
