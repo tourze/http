@@ -574,7 +574,7 @@ class Response extends Object implements ResponseInterface
         }
 
         // 停止执行
-        Http::end();
+        Base::getHttp()->end();
     }
 
     /**
