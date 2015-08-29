@@ -6,7 +6,6 @@ use tourze\Base\Base;
 use tourze\Base\Component\Http as BaseHttp;
 use tourze\Base\Helper\Url;
 use tourze\Http\Exception\Http304Exception;
-use Workerman\Protocols\HttpCache;
 
 /**
  * 包含了一些http操作相关的基础信息和助手方法
@@ -133,12 +132,7 @@ abstract class Http extends BaseHttp
      */
     public static function headersSent($file = null, $line = null)
     {
-        if (PHP_SAPI != 'cli')
-        {
-            return headers_sent($file, $line);
-        }
-
-        return ! empty(HttpCache::$header);
+        return headers_sent($file, $line);
     }
 
     /**
@@ -148,42 +142,7 @@ abstract class Http extends BaseHttp
      */
     public static function headersList()
     {
-        if (PHP_SAPI != 'cli')
-        {
-            return headers_list();
-        }
-
-        $headers = HttpCache::$header;
-        foreach ($headers as $k => $v)
-        {
-            $headers[$k] = is_array($v)
-                ? implode(', ', $v)
-                : $v;
-        }
-        return $headers;
-    }
-
-    /**
-     * 写cookie，注意不要直接使用[setcookie]函数
-     *
-     * @param string $name
-     * @param string $value
-     * @param int    $maxAge
-     * @param string $path
-     * @param string $domain
-     * @param bool   $secure
-     * @param bool   $httpOnly
-     * @return bool
-     */
-    public function setCookie($name, $value = '', $maxAge = 0, $path = '', $domain = '', $secure = false, $httpOnly = false)
-    {
-        // 这样的写法其实很难看。。。
-        if (class_exists('tourze\Server\Protocol\Http'))
-        {
-            return call_user_func_array(['tourze\Server\Protocol\Http', 'setcookie'], [$name, $value, $maxAge, $path, $domain, $secure, $httpOnly]);
-        }
-
-        return setcookie($name, $value, $maxAge, $path, $domain, $secure, $httpOnly);
+        return headers_list();
     }
 
     /**
@@ -217,24 +176,6 @@ abstract class Http extends BaseHttp
 
         session_write_close();
         return true;
-    }
-
-    /**
-     * 代替php的exit和die
-     *
-     * @param string $msg
-     */
-    public function end($msg = '')
-    {
-        // 这样的写法其实很难看。。。
-        if (class_exists('tourze\Server\Protocol\Http'))
-        {
-            call_user_func_array(['tourze\Server\Protocol\Http', 'end'], [$msg]);
-            return;
-        }
-
-        echo $msg;
-        exit;
     }
 
     /**
