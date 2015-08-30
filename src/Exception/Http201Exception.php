@@ -2,7 +2,7 @@
 
 namespace tourze\Http\Exception;
 
-use tourze\Http\Message;
+use tourze\Http\Http;
 
 class Http201Exception extends RedirectException
 {
@@ -10,6 +10,6 @@ class Http201Exception extends RedirectException
     /**
      * @var int
      */
-    protected $_code = Message::CREATED;
+    protected $_code = Http::CREATED;
 
 }

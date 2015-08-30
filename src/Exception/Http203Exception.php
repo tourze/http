@@ -2,7 +2,7 @@
 
 namespace tourze\Http\Exception;
 
-use tourze\Http\Message;
+use tourze\Http\Http;
 
 class Http203Exception extends RedirectException
 {
@@ -10,6 +10,6 @@ class Http203Exception extends RedirectException
     /**
      * @var int
      */
-    protected $_code = Message::NON_AUTHORITATIVE_INFORMATION;
+    protected $_code = Http::NON_AUTHORITATIVE_INFORMATION;
 
 }

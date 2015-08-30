@@ -2,7 +2,7 @@
 
 namespace tourze\Http\Exception;
 
-use tourze\Http\Message;
+use tourze\Http\Http;
 
 class Http300Exception extends RedirectException
 {
@@ -10,6 +10,6 @@ class Http300Exception extends RedirectException
     /**
      * @var int
      */
-    protected $_code = Message::MULTIPLE_CHOICES;
+    protected $_code = Http::MULTIPLE_CHOICES;
 
 }

@@ -312,20 +312,13 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * @var  string  protocol: HTTP/1.1, FTP, CLI, etc
+     * @var string 协议字符串
      */
-    protected $_protocol;
+    protected $_protocol = 'HTTP/1.1';
 
     protected function getProtocol()
     {
-        if ($this->_protocol)
-        {
-            return $this->_protocol;
-        }
-        else
-        {
-            return $this->_protocol = Http::$protocol;
-        }
+        return $this->_protocol;
     }
 
     protected function setProtocol($protocol)
@@ -765,7 +758,7 @@ class Request extends Object implements RequestInterface
 
         if ( ! $this->route instanceof Route)
         {
-            $e = HttpException::factory(Message::NOT_FOUND, 'Unable to find a route to match the URI: :uri', [
+            $e = HttpException::factory(Http::NOT_FOUND, 'Unable to find a route to match the URI: :uri', [
                 ':uri' => $this->uri,
             ]);
             $e->request($this);

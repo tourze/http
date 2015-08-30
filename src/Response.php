@@ -91,7 +91,7 @@ class Response extends Object implements ResponseInterface
 
     protected function setStatus($status)
     {
-        if (array_key_exists($status, Message::$text))
+        if (array_key_exists($status, Http::$text))
         {
             $this->_status = (int) $status;
         }
@@ -131,15 +131,10 @@ class Response extends Object implements ResponseInterface
     /**
      * @var  string      返回的协议字符串
      */
-    protected $_protocol;
+    protected $_protocol = 'HTTP/1.1';
 
     protected function getProtocol()
     {
-        if (null === $this->_protocol)
-        {
-            $this->_protocol = Http::$protocol;
-        }
-
         return $this->_protocol;
     }
 
@@ -305,7 +300,7 @@ class Response extends Object implements ResponseInterface
         $status = $this->status;
 
         // Create the response header
-        $renderHeaders = [$protocol . ' ' . $status . ' ' . Message::$text[$status]];
+        $renderHeaders = [$protocol . ' ' . $status . ' ' . Arr::get(Http::$text, $status)];
 
         // Get the headers array
         $headers = $this->headers();
@@ -365,7 +360,7 @@ class Response extends Object implements ResponseInterface
      */
     protected function _sendHeadersToPhp(array $headers, $replace)
     {
-        if (Http::headersSent())
+        if (Base::getHttp()->headersSent())
         {
             return $this;
         }
@@ -381,7 +376,8 @@ class Response extends Object implements ResponseInterface
                 }
                 continue;
             }
-            Http::header($line, $replace);
+
+            Base::getHttp()->header($line, $replace);
         }
 
         return $this;
@@ -627,7 +623,7 @@ class Response extends Object implements ResponseInterface
             . ' '
             . $this->status
             . ' '
-            . Message::$text[$this->status]
+            . Arr::get(Http::$text, $this->status)
             . "\r\n";
         $output .= $this->message->headerLines;
         $output .= $this->message->body;
@@ -816,6 +812,6 @@ class Response extends Object implements ResponseInterface
      */
     public function getReasonPhrase()
     {
-        return isset(Message::$text[$this->status]) ? Message::$text[$this->status] : '';
+        return Arr::get(Http::$text, $this->status, '');
     }
 }

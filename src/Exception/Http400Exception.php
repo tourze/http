@@ -2,14 +2,14 @@
 
 namespace tourze\Http\Exception;
 
-use tourze\Http\Message;
+use tourze\Http\Http;
 
 class Http400Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 400 Bad Request
+     * @var int Bad Request
      */
-    protected $_code = Message::BAD_REQUEST;
+    protected $_code = Http::BAD_REQUEST;
 
 }
