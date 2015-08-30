@@ -2,13 +2,13 @@
 
 namespace tourze\Http;
 
-use tourze\Base\Component\Http as BaseHttp;
+use tourze\Http\Component\Http as HttpComponent;
 
 /**
  * HTTP组件
  *
  * @package tourze\Http
  */
-abstract class Http extends BaseHttp
+class Http extends HttpComponent
 {
 }
