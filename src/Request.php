@@ -588,16 +588,11 @@ class Request extends Object implements RequestInterface
     public function init()
     {
         // 如果当前运行环境是CLI，那么就会没有初始请求这个概念
-        if (PHP_SAPI != 'cli' && ! self::$initial)
+        if ( ! self::$initial)
         {
             self::$initial = $this;
             $this->_initial = true;
             $this->message->setHeaders(Http::requestHeaders());
-        }
-        // 如果是CLI，那么每个请求都当做为初始请求
-        elseif (PHP_SAPI == 'cli')
-        {
-            $this->_initial = true;
         }
     }
 
