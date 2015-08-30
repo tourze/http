@@ -594,9 +594,10 @@ class Request extends Object implements RequestInterface
             $this->_initial = true;
             $this->message->setHeaders(Http::requestHeaders());
         }
-        else
+        // 如果是CLI，那么每个请求都当做为初始请求
+        elseif (PHP_SAPI == 'cli')
         {
-            $this->_initial = false;
+            $this->_initial = true;
         }
     }
 
