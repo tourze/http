@@ -218,9 +218,9 @@ abstract class RequestClient extends Object
                 if ($callbackResult instanceof Request)
                 {
                     // If the callback returns a request, automatically assign client params
-                    $this->assignClientProperties($callbackResult->client());
+                    $this->assignClientProperties($callbackResult->client);
                     $callbackResult
-                        ->client()
+                        ->client
                         ->callbackDepth = $this->callbackDepth + 1;
 
                     // Execute the request

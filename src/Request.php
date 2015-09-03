@@ -250,10 +250,12 @@ class Request extends Object implements RequestInterface
 
     /**
      * @param RequestClient $client
+     * @return $this
      */
     public function setClient($client)
     {
         $this->_client = $client;
+        return $this;
     }
 
     /**
@@ -499,22 +501,22 @@ class Request extends Object implements RequestInterface
     protected $_message = null;
 
     /**
-     * @var  array   parameters from the route
+     * @var array 路由参数
      */
     protected $_params = [];
 
     /**
-     * @var array    query parameters
+     * @var array get参数
      */
     protected $_get = [];
 
     /**
-     * @var array    post parameters
+     * @var array post参数
      */
     protected $_post = [];
 
     /**
-     * @var array    cookies to send with the request
+     * @var array 要发送出来的cookie
      */
     protected $_cookies = [];
 
@@ -532,6 +534,7 @@ class Request extends Object implements RequestInterface
      * @var array 要保留使用的路由参数
      */
     public $persistRouteParams = [
+        'namespace',
         'directory',
         'controller',
         'action',
@@ -653,27 +656,6 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * Provides access to the [RequestClient].
-     *
-     * @param   RequestClient $client
-     *
-     * @return  RequestClient
-     */
-    public function client(RequestClient $client = null)
-    {
-        if (null === $client)
-        {
-            return $this->_client;
-        }
-        else
-        {
-            $this->_client = $client;
-
-            return $this;
-        }
-    }
-
-    /**
      * Gets and sets the requested with property, which should
      * be relative to the x-requested-with pseudo header.
      *
@@ -763,7 +745,6 @@ class Request extends Object implements RequestInterface
                     unset($params[$name]);
                 }
 
-                // Params cannot be changed once matched
                 $this->_params = $params;
             }
         }
@@ -778,14 +759,14 @@ class Request extends Object implements RequestInterface
             throw $e;
         }
 
-        if ( ! $this->_client instanceof RequestClient)
+        if ( ! $this->client instanceof RequestClient)
         {
             throw new RequestException('Unable to execute :uri without a RequestClient', [
                 ':uri' => $this->uri,
             ]);
         }
 
-        return $this->_client->execute($this);
+        return $this->client->execute($this);
     }
 
     /**

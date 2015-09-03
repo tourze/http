@@ -3,6 +3,7 @@
 namespace tourze\Http\Request\Client;
 
 use ReflectionClass;
+use tourze\Base\Base;
 use tourze\Base\Exception\BaseException;
 use tourze\Http\Exception\HttpException;
 use tourze\Http\Http;
@@ -48,6 +49,10 @@ class InternalClient extends RequestClient
         $previous = Request::$current;
         Request::$current = $request;
 
+        Base::getLog()->info(__METHOD__ . ' controller class', [
+            'class' => $className,
+        ]);
+
         try
         {
             if ( ! class_exists($className))
@@ -61,6 +66,9 @@ class InternalClient extends RequestClient
 
             if ($class->isAbstract())
             {
+                Base::getLog()->error(__METHOD__ . ' calling abstract controller class', [
+                    'class' => $className,
+                ]);
                 throw new BaseException('Cannot create instances of abstract :controller', [
                     ':controller' => $className
                 ]);
@@ -74,6 +82,7 @@ class InternalClient extends RequestClient
 
             if ( ! $response instanceof Response)
             {
+                Base::getLog()->error(__METHOD__ . ' unknown response type');
                 throw new BaseException('Controller failed to return a Response');
             }
         }
