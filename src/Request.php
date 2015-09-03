@@ -529,6 +529,16 @@ class Request extends Object implements RequestInterface
     protected $_initial = false;
 
     /**
+     * @var array 要保留使用的路由参数
+     */
+    public $persistRouteParams = [
+        'directory',
+        'controller',
+        'action',
+        'host',
+    ];
+
+    /**
      * 根据URI创建一个新的请求对象
      *
      *     $request = new Request($uri);
@@ -742,15 +752,16 @@ class Request extends Object implements RequestInterface
                 }
 
                 // 保存控制器
-                $this->controller = $params['controller'];
+                $this->controller = Arr::get($params, 'controller');
 
                 // 保存动作
-                $this->action = (isset($params['action']))
-                    ? $params['action']
-                    : Route::$defaultAction;
+                $this->action = Arr::get($params, 'action', Route::$defaultAction);
 
-                // These are accessible as public vars and can be overloaded
-                unset($params['controller'], $params['action'], $params['directory']);
+                // 清理保留字段
+                foreach ($this->persistRouteParams as $name)
+                {
+                    unset($params[$name]);
+                }
 
                 // Params cannot be changed once matched
                 $this->_params = $params;
