@@ -585,11 +585,21 @@ class Request extends Object implements RequestInterface
 
             $this->external = true;
             $this->client = new ExternalClient($clientParams);
+
+            Base::getLog()->debug(__METHOD__ . ' make an internal request', [
+                'uri'    => $uri,
+                'params' => $clientParams,
+            ]);
         }
         else
         {
             $this->uri = trim($uri, '/');
             $this->client = new InternalClient($clientParams);
+
+            Base::getLog()->debug(__METHOD__ . ' make an external request', [
+                'uri'    => $uri,
+                'params' => $clientParams,
+            ]);
         }
 
         parent::__construct();
@@ -621,73 +631,38 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * Create a URL string from the current request. This is a shortcut for:
-     *     echo URL::site($this->request->uri(), $protocol);
+     * 创建一个当前请求的URL
      *
-     * @param    mixed $protocol protocol string or Request object
-     *
-     * @return   string
-     * @uses     URL::site
+     * @param  mixed $protocol 协议字符串
+     * @return string
      */
     public function url($protocol = null)
     {
-        // Create a URI with the current route and convert it to a URL
         return Url::site($this->uri, $protocol);
     }
 
     /**
-     * Retrieves a value from the route parameters.
+     * 获取路由参数
+     *
      *     $id = $request->param('id');
      *
-     * @param   string $key     Key of the value
-     * @param   mixed  $default Default value if the key is not set
-     *
-     * @return  mixed
+     * @param  string $key     参数名
+     * @param  mixed  $default 默认返回值
+     * @return mixed
      */
     public function param($key = null, $default = null)
     {
+        // 一次性返回所有参数
         if (null === $key)
         {
-            // Return the full array
             return $this->_params;
         }
 
-        return isset($this->_params[$key]) ? $this->_params[$key] : $default;
+        return Arr::get($this->_params, $key, $default);
     }
 
     /**
-     * Gets and sets the requested with property, which should
-     * be relative to the x-requested-with pseudo header.
-     *
-     * @param   string $requestedWith Requested with value
-     *
-     * @return  mixed
-     */
-    public function requestedWith($requestedWith = null)
-    {
-        if (null === $requestedWith)
-        {
-            // Act as a getter
-            return $this->_requestedWith;
-        }
-
-        // Act as a setter
-        $this->_requestedWith = strtolower($requestedWith);
-
-        return $this;
-    }
-
-    /**
-     * Processes the request, executing the controller action that handles this
-     * request, determined by the [Route].
-     * 1. Before the controller action is called, the [Controller::before] method
-     * will be called.
-     * 2. Next the controller action will be called.
-     * 3. After the controller action is called, the [Controller::after] method
-     * will be called.
-     * By default, the output from the controller is captured and returned, and
-     * no headers are sent.
-     *     $request->execute();
+     * 执行请求
      *
      * @return \tourze\Http\Response
      * @throws \tourze\Http\Exception\HttpException
@@ -698,20 +673,21 @@ class Request extends Object implements RequestInterface
     {
         if ( ! $this->external)
         {
+            Base::getLog()->debug(__METHOD__ . ' execute internal request');
             $processed = Request::process($this, $this->routes);
 
             if ($processed)
             {
                 // 保存匹配到的路由
-                $this->route = $processed['route'];
-                $params = $processed['params'];
+                $this->route = Arr::get($processed, 'route');
+                $params = Arr::get($processed, 'params');
 
                 // 是否为外部链接
                 $this->external = $this->route->isExternal();
 
+                // 控制器放在子目录中的情况
                 if (isset($params['directory']))
                 {
-                    // 控制器放在子目录中的情况
                     $this->directory = $params['directory'];
                 }
 
@@ -746,6 +722,17 @@ class Request extends Object implements RequestInterface
                 }
 
                 $this->_params = $params;
+
+                Base::getLog()->debug(__METHOD__ . ' execute info', [
+                    'directory'  => $this->directory,
+                    'controller' => $this->controller,
+                    'action'     => $this->action,
+                    'params'     => $this->_params,
+                ]);
+            }
+            else
+            {
+                Base::getLog()->debug(__METHOD__ . ' not route matched');
             }
         }
 

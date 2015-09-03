@@ -11,7 +11,7 @@
   ],
   "require": {
     "psr/http-message": "^1.0",
-    "tourze/core": "dev-master",
+    "tourze/base": "dev-master",
     "tourze/route": "dev-master",
     "rmccue/requests": "^1.6"
   },
