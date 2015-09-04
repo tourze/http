@@ -127,7 +127,8 @@ class Request extends Object implements RequestInterface
         foreach ($routes as $name => $route)
         {
             Base::getLog()->debug(__METHOD__ . ' check route', [
-                'name' => $name
+                'name'   => $name,
+                'method' => $request->method,
             ]);
             /* @var $route Route */
             if ($params = $route->matches($request->uri, $request->method))
