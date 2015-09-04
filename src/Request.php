@@ -19,26 +19,32 @@ use tourze\Route\Route;
 use tourze\Base\Security\Valid;
 
 /**
- * Request. Uses the [Route] class to determine what
- * [Controller] to send the request to.
+ * 请求处理类
  *
- * @property   RequestClient client
- * @property   Route         route
- * @property   Message       message
- * @property   array         routes
- * @property   string        body
- * @property   string        controller
- * @property   string        action
- * @property   string        directory
- * @property   string        method
- * @property   string        protocol
- * @property   boolean       secure
- * @property   string        uri
- * @property   string        referrer
- * @property   boolean       external
- * @property   string        requestedWith
- * @package    Base
- * @category   Base
+ * @property RequestClient client
+ * @property Route         route
+ * @property Message       message
+ * @property array         routes
+ * @property string        body
+ * @property string        controller
+ * @property string        action
+ * @property string        directory
+ * @property string        method
+ * @property string        protocol
+ * @property bool          ajax
+ * @property bool          secure
+ * @property bool          initial
+ * @property string        uri
+ * @property string        referrer
+ * @property bool          external
+ * @property string        requestedWith
+ * @property array         params
+ * @property array         get
+ * @property array         post
+ * @property array         cookies
+ * @property array         persistRouteParams
+ * @property int           contentLength
+ * @package tourze\Http
  */
 class Request extends Object implements RequestInterface
 {
@@ -64,7 +70,7 @@ class Request extends Object implements RequestInterface
     /**
      * @var static 系统主请求
      */
-    public static $initial;
+    public static $initialRequest;
 
     /**
      * @var static 当前正在处理的请求
@@ -102,20 +108,6 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * 返回系统的初始请求
-     *
-     *     $request = Request::initial();
-     *     // 检测当前请求是否就是初始请求
-     *     if (Request::initial() === Request::current()) { }
-     *
-     * @return Request
-     */
-    public static function initial()
-    {
-        return Request::$initial;
-    }
-
-    /**
      * 解析请求，查找路由
      *
      * @param  Request $request Request
@@ -124,14 +116,26 @@ class Request extends Object implements RequestInterface
      */
     public static function process(Request $request, $routes = null)
     {
-        $routes = (empty($routes)) ? Route::all() : $routes;
-        $params = null;
+        Base::getLog()->debug(__METHOD__ . ' process request and find the route');
 
+        $routes = (empty($routes)) ? Route::all() : $routes;
+        Base::getLog()->debug(__METHOD__ . ' get route list for process route', [
+            'routes' => array_keys($routes)
+        ]);
+
+        $params = null;
         foreach ($routes as $name => $route)
         {
+            Base::getLog()->debug(__METHOD__ . ' check route', [
+                'name' => $name
+            ]);
             /* @var $route Route */
             if ($params = $route->matches($request->uri, $request->method))
             {
+                Base::getLog()->debug(__METHOD__ . ' matched route found', [
+                    'name'   => $name,
+                    'params' => $params,
+                ]);
                 return [
                     'params' => $params,
                     'route'  => $route,
@@ -177,371 +181,6 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * Parses an accept header and returns an array (type => quality) of the accepted types, ordered by quality.
-     *
-     *     $accept = Request::_parseAccept($header, $defaults);
-     *
-     * @param   string $header  Header to parse
-     * @param   array  $accepts Default values
-     * @return  array
-     */
-    protected static function _parseAccept(& $header, array $accepts = null)
-    {
-        if ( ! empty($header))
-        {
-            // Get all of the types
-            $types = explode(',', $header);
-
-            foreach ($types as $type)
-            {
-                // Split the type into parts
-                $parts = explode(';', $type);
-
-                // Make the type only the MIME
-                $type = trim(array_shift($parts));
-
-                // Default quality is 1.0
-                $quality = 1.0;
-
-                foreach ($parts as $part)
-                {
-                    // Prevent undefined $value notice below
-                    if (false === strpos($part, '='))
-                    {
-                        continue;
-                    }
-
-                    // Separate the key and value
-                    list ($key, $value) = explode('=', trim($part));
-
-                    if ('q' === $key)
-                    {
-                        // There is a quality for this type
-                        $quality = (float) trim($value);
-                    }
-                }
-
-                // Add the accept type and quality
-                $accepts[$type] = $quality;
-            }
-        }
-
-        // Make sure that accepts is an array
-        $accepts = (array) $accepts;
-
-        // Order by quality
-        arsort($accepts);
-
-        return $accepts;
-    }
-
-    /**
-     * @var  string  the x-requested-with header which most likely will be xmlhttprequest
-     */
-    protected $_requestedWith;
-
-    /**
-     * @return RequestClient
-     */
-    public function getClient()
-    {
-        return $this->_client;
-    }
-
-    /**
-     * @param RequestClient $client
-     * @return $this
-     */
-    public function setClient($client)
-    {
-        $this->_client = $client;
-        return $this;
-    }
-
-    /**
-     * @param null|Message $message
-     * @return Request
-     */
-    public function setMessage($message)
-    {
-        $this->_message = $message;
-        return $this;
-    }
-
-    /**
-     * @return null|Message
-     */
-    public function getMessage()
-    {
-        return $this->_message;
-    }
-
-    protected function getRequestedWith()
-    {
-        return $this->_requestedWith;
-    }
-
-    protected function setRequestedWith($requestWith)
-    {
-        $this->_requestedWith = $requestWith;
-    }
-
-    /**
-     * @var string 请求方法，GET、POST或其他
-     */
-    protected $_method = 'GET';
-
-    /**
-     * 读取当前请求方法
-     *
-     * @return string
-     */
-    public function getMethod()
-    {
-        return $this->_method;
-    }
-
-    /**
-     * 设置当前请求方法
-     *
-     * @param $method
-     * @return $this
-     */
-    public function setMethod($method)
-    {
-        $this->_method = strtoupper($method);
-        return $this;
-    }
-
-    /**
-     * @var string 协议字符串
-     */
-    protected $_protocol = 'HTTP/1.1';
-
-    protected function getProtocol()
-    {
-        return $this->_protocol;
-    }
-
-    protected function setProtocol($protocol)
-    {
-        $this->_protocol = strtoupper($protocol);
-    }
-
-    /**
-     * @var  boolean  当前请求是否为安全连接
-     */
-    protected $_secure = false;
-
-    protected function getSecure()
-    {
-        return $this->_secure;
-    }
-
-    protected function setSecure($secure)
-    {
-        $this->_secure = (bool) $secure;
-    }
-
-    /**
-     * @var string referring URL
-     */
-    protected $_referrer;
-
-    protected function getReferrer()
-    {
-        return $this->_referrer;
-    }
-
-    protected function setReferrer($referrer)
-    {
-        $this->_referrer = (string) $referrer;
-    }
-
-    /**
-     * @var  Route       route matched for this request
-     */
-    protected $_route;
-
-    protected function getRoute()
-    {
-        return $this->_route;
-    }
-
-    protected function setRoute(Route $route)
-    {
-        $this->_route = $route;
-    }
-
-    /**
-     * @var  Route       array of routes to manually look at instead of the global namespace
-     */
-    protected $_routes;
-
-    protected function getRoutes()
-    {
-        return $this->_routes;
-    }
-
-    protected function setRoutes($routes)
-    {
-        $this->_routes = $routes;
-    }
-
-    /**
-     * 读取当前的body内容
-     *
-     * @return string
-     */
-    public function getBody()
-    {
-        return $this->message->body;
-    }
-
-    /**
-     * 设置body内容
-     *
-     * @param string $body
-     * @return $this
-     */
-    public function setBody($body)
-    {
-        $this->message->body = $body;
-        return $this;
-    }
-
-    /**
-     * @var  string  控制器子目录
-     */
-    protected $_directory = '';
-
-    protected function getDirectory()
-    {
-        return $this->_directory;
-    }
-
-    protected function setDirectory($directory)
-    {
-        $this->_directory = (string) $directory;
-    }
-
-    /**
-     * @var  string  当前请求要执行的控制器
-     */
-    protected $_controller;
-
-    protected function getController()
-    {
-        return $this->_controller;
-    }
-
-    protected function setController($controller)
-    {
-        $this->_controller = (string) $controller;
-    }
-
-    /**
-     * @var  string  控制器要执行的动作
-     */
-    protected $_action;
-
-    protected function getAction()
-    {
-        return $this->_action;
-    }
-
-    protected function setAction($action)
-    {
-        $this->_action = (string) $action;
-    }
-
-    /**
-     * @var  string  当前请求的URI
-     */
-    protected $_uri;
-
-    /**
-     * 读取当前URI
-     *
-     * @return string
-     */
-    public function getUri()
-    {
-        return empty($this->_uri) ? '/' : $this->_uri;
-    }
-
-    /**
-     * 设置URI
-     *
-     * @param mixed $uri
-     */
-    protected function setUri($uri)
-    {
-        $this->_uri = $uri;
-    }
-
-    /**
-     * @var  boolean  external request
-     */
-    protected $_external = false;
-
-    protected function getExternal()
-    {
-        return $this->_external;
-    }
-
-    protected function setExternal($external)
-    {
-        $this->_external = (bool) $external;
-    }
-
-    /**
-     * @var null|Message
-     */
-    protected $_message = null;
-
-    /**
-     * @var array 路由参数
-     */
-    protected $_params = [];
-
-    /**
-     * @var array get参数
-     */
-    protected $_get = [];
-
-    /**
-     * @var array post参数
-     */
-    protected $_post = [];
-
-    /**
-     * @var array 要发送出来的cookie
-     */
-    protected $_cookies = [];
-
-    /**
-     * @var RequestClient
-     */
-    protected $_client;
-
-    /**
-     * @var bool|static
-     */
-    protected $_initial = false;
-
-    /**
-     * @var array 要保留使用的路由参数
-     */
-    public $persistRouteParams = [
-        'namespace',
-        'directory',
-        'controller',
-        'action',
-        'host',
-    ];
-
-    /**
      * 根据URI创建一个新的请求对象
      *
      *     $request = new Request($uri);
@@ -563,7 +202,7 @@ class Request extends Object implements RequestInterface
         $splitUri = explode('?', $uri);
         $uri = array_shift($splitUri);
 
-        if (null !== Request::$initial)
+        if (null !== Request::$initialRequest)
         {
             if ($splitUri)
             {
@@ -606,24 +245,475 @@ class Request extends Object implements RequestInterface
     }
 
     /**
+     * @var RequestClient 请求处理驱动客户端
+     */
+    protected $_client;
+
+    /**
+     * @return RequestClient
+     */
+    public function getClient()
+    {
+        return $this->_client;
+    }
+
+    /**
+     * @param RequestClient $client
+     */
+    public function setClient($client)
+    {
+        $this->_client = $client;
+    }
+
+    /**
+     * @var string x-requested-with头，一般xmlhttprequest都有这个
+     */
+    protected $_requestedWith;
+
+    /**
+     * @return string
+     */
+    protected function getRequestedWith()
+    {
+        return $this->_requestedWith;
+    }
+
+    /**
+     * @param string $requestWith
+     */
+    protected function setRequestedWith($requestWith)
+    {
+        $this->_requestedWith = $requestWith;
+    }
+
+    /**
+     * @var string 请求方法，GET、POST或其他
+     */
+    protected $_method = 'GET';
+
+    /**
+     * @return string
+     */
+    public function getMethod()
+    {
+        return $this->_method;
+    }
+
+    /**
+     * @param string $method
+     */
+    public function setMethod($method)
+    {
+        $this->_method = strtoupper($method);
+    }
+
+    /**
+     * @var string 协议字符串
+     */
+    protected $_protocol = 'HTTP/1.1';
+
+    /**
+     * @return string
+     */
+    protected function getProtocol()
+    {
+        return $this->_protocol;
+    }
+
+    /**
+     * @param string $protocol
+     */
+    protected function setProtocol($protocol)
+    {
+        $this->_protocol = strtoupper($protocol);
+    }
+
+    /**
+     * @var bool 当前请求是否为安全连接
+     */
+    protected $_secure = false;
+
+    /**
+     * @return bool
+     */
+    protected function getSecure()
+    {
+        return $this->_secure;
+    }
+
+    /**
+     * @param bool $secure
+     */
+    protected function setSecure($secure)
+    {
+        $this->_secure = (bool) $secure;
+    }
+
+    /**
+     * @var string 来路URL
+     */
+    protected $_referrer;
+
+    /**
+     * @return string
+     */
+    protected function getReferrer()
+    {
+        return $this->_referrer;
+    }
+
+    /**
+     * @param string $referrer
+     */
+    protected function setReferrer($referrer)
+    {
+        $this->_referrer = (string) $referrer;
+    }
+
+    /**
+     * @var Route 当前请求匹配到的路由
+     */
+    protected $_route;
+
+    /**
+     * @return Route
+     */
+    protected function getRoute()
+    {
+        return $this->_route;
+    }
+
+    /**
+     * @param Route $route
+     */
+    protected function setRoute(Route $route)
+    {
+        $this->_route = $route;
+    }
+
+    /**
+     * @var Route[] 要在这些路由中查找请求，如果为空的话，那就直接用当前请求
+     */
+    protected $_routes;
+
+    /**
+     * @return Route[]
+     */
+    protected function getRoutes()
+    {
+        return $this->_routes;
+    }
+
+    /**
+     * @param Route[] $routes
+     */
+    protected function setRoutes($routes)
+    {
+        $this->_routes = $routes;
+    }
+
+    /**
+     * @var string 控制器子目录
+     */
+    protected $_directory = '';
+
+    /**
+     * @return string
+     */
+    protected function getDirectory()
+    {
+        return $this->_directory;
+    }
+
+    /**
+     * @param string $directory
+     */
+    protected function setDirectory($directory)
+    {
+        $this->_directory = (string) $directory;
+    }
+
+    /**
+     * @var  string  当前请求要执行的控制器
+     */
+    protected $_controller;
+
+    /**
+     * @return string
+     */
+    protected function getController()
+    {
+        return $this->_controller;
+    }
+
+    /**
+     * @param string $controller
+     */
+    protected function setController($controller)
+    {
+        $this->_controller = (string) $controller;
+    }
+
+    /**
+     * @var  string  控制器要执行的动作
+     */
+    protected $_action;
+
+    /**
+     * @return string
+     */
+    protected function getAction()
+    {
+        return $this->_action;
+    }
+
+    /**
+     * @param string $action
+     */
+    protected function setAction($action)
+    {
+        $this->_action = (string) $action;
+    }
+
+    /**
+     * @var string 当前请求的URI
+     */
+    protected $_uri;
+
+    /**
+     * @return string
+     */
+    public function getUri()
+    {
+        return empty($this->_uri) ? '/' : $this->_uri;
+    }
+
+    /**
+     * @param mixed $uri
+     */
+    protected function setUri($uri)
+    {
+        $this->_uri = $uri;
+    }
+
+    /**
+     * @var bool 是否是外部请求
+     */
+    protected $_external = false;
+
+    /**
+     * @return bool
+     */
+    protected function getExternal()
+    {
+        return $this->_external;
+    }
+
+    /**
+     * @param bool $external
+     */
+    protected function setExternal($external)
+    {
+        $this->_external = (bool) $external;
+    }
+
+    /**
+     * @var null|Message
+     */
+    protected $_message = null;
+
+    /**
+     * @param null|Message $message
+     * @return Request
+     */
+    public function setMessage($message)
+    {
+        $this->_message = $message;
+        return $this;
+    }
+
+    /**
+     * @return null|Message
+     */
+    public function getMessage()
+    {
+        return $this->_message;
+    }
+
+    /**
+     * 读取当前的body内容
+     *
+     * @return string
+     */
+    public function getBody()
+    {
+        return $this->message->body;
+    }
+
+    /**
+     * 设置body内容
+     *
+     * @param string $body
+     * @return $this
+     */
+    public function setBody($body)
+    {
+        $this->message->body = $body;
+        return $this;
+    }
+
+    /**
+     * @var array 当前请求的路由参数
+     */
+    protected $_params = [];
+
+    /**
+     * @return array
+     */
+    public function getParams()
+    {
+        return $this->_params;
+    }
+
+    /**
+     * @param array $params
+     */
+    public function setParams($params)
+    {
+        $this->_params = $params;
+    }
+
+    /**
+     * @var array get参数
+     */
+    protected $_get = [];
+
+    /**
+     * @return array
+     */
+    public function getGet()
+    {
+        return $this->_get;
+    }
+
+    /**
+     * @param array $get
+     */
+    public function setGet($get)
+    {
+        $this->_get = $get;
+    }
+
+    /**
+     * @var array post参数
+     */
+    protected $_post = [];
+
+    /**
+     * @return array
+     */
+    public function getPost()
+    {
+        return $this->_post;
+    }
+
+    /**
+     * @param array $post
+     */
+    public function setPost($post)
+    {
+        $this->_post = $post;
+    }
+
+    /**
+     * @var array 要发送出来的cookie
+     */
+    protected $_cookies = [];
+
+    /**
+     * @return array
+     */
+    public function getCookies()
+    {
+        return $this->_cookies;
+    }
+
+    /**
+     * @param array $cookies
+     */
+    public function setCookies($cookies)
+    {
+        $this->_cookies = $cookies;
+    }
+
+    /**
+     * @var bool 当前请求实例是否为初始实例
+     */
+    protected $_initial = false;
+
+    /**
+     * @return  boolean
+     */
+    public function isInitial()
+    {
+        return $this->_initial;
+    }
+
+    /**
+     * @param bool $initial
+     */
+    public function setInitial($initial)
+    {
+        $this->_initial = $initial;
+    }
+
+    /**
+     * @var array 要保留使用的路由参数
+     */
+    protected $_persistRouteParams = [
+        'namespace',
+        'directory',
+        'controller',
+        'action',
+        'host',
+    ];
+
+    /**
+     * @return array
+     */
+    public function getPersistRouteParams()
+    {
+        return $this->_persistRouteParams;
+    }
+
+    /**
+     * @param array $persistRouteParams
+     */
+    public function setPersistRouteParams($persistRouteParams)
+    {
+        $this->_persistRouteParams = $persistRouteParams;
+    }
+
+    /**
      * 初始化
      */
     public function init()
     {
         // 如果当前运行环境是CLI，那么就会没有初始请求这个概念
-        if ( ! self::$initial)
+        if ( ! self::$initialRequest)
         {
-            self::$initial = $this;
-            $this->_initial = true;
+            self::$initialRequest = $this;
+            $this->initial = true;
             $this->message->setHeaders(Http::requestHeaders());
         }
     }
 
     /**
-     * Returns the response as the string representation of a request.
+     * 返回请求的输出
+     *
      *     echo $request;
      *
-     * @return  string
+     * @return string
      */
     public function __toString()
     {
@@ -757,19 +847,9 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * 当前请求实例是否为初始实例
+     * 当前请求是否是ajax请求的
      *
-     * @return  boolean
-     */
-    public function isInitial()
-    {
-        return $this->_initial;
-    }
-
-    /**
-     * Returns whether this is an ajax request (as used by JS frameworks)
-     *
-     * @return  boolean
+     * @return bool
      */
     public function isAjax()
     {
@@ -809,46 +889,40 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * Set and get cookies values for this request.
+     * 设置或者读取cookie
      *
-     * @param   mixed  $key   CookieHelper name, or array of cookie values
-     * @param   string $value Value to set to cookie
-     * @return  string
-     * @return  mixed
+     * @param  mixed  $key   Cookie名，或一个cookie数组
+     * @param  string $value 值
+     * @return string
+     * @return mixed
      */
     public function cookie($key = null, $value = null)
     {
         if (is_array($key))
         {
-            // Act as a setter, replace all cookies
             $this->_cookies = $key;
 
             return $this;
         }
         elseif (null === $key)
         {
-            // Act as a getter, all cookies
             return $this->_cookies;
         }
         elseif (null === $value)
         {
-            // Act as a getting, single cookie
             return isset($this->_cookies[$key]) ? $this->_cookies[$key] : null;
         }
 
-        // Act as a setter for a single cookie
         $this->_cookies[$key] = (string) $value;
-
         return $this;
     }
 
     /**
-     * Returns the length of the body for use with
-     * content header
+     * 读取当前body的长度
      *
-     * @return  integer
+     * @return int
      */
-    public function contentLength()
+    public function getContentLength()
     {
         return strlen($this->body);
     }
@@ -870,15 +944,13 @@ class Request extends Object implements RequestInterface
             $body = http_build_query($post, null, '&');
         }
 
-        // Set the content length
-        $this->headers('content-length', (string) $this->contentLength());
+        $this->headers('content-length', (string) $this->contentLength);
 
         if (Base::$expose)
         {
             $this->headers('user-agent', Base::version());
         }
 
-        // Prepare cookies
         if ($this->_cookies)
         {
             $cookieString = [];
@@ -903,43 +975,36 @@ class Request extends Object implements RequestInterface
     /**
      * 获取或者设置GET数据
      *
-     * @param  mixed  $key   Key or key value pairs to set
-     * @param  string $value Value to set to a key
-     * @return mixed
+     * @param  mixed  $key   键名
+     * @param  string $value 值
+     * @return mixed|$this
      */
     public function query($key = null, $value = null)
     {
         if (is_array($key))
         {
-            // Act as a setter, replace all query strings
             $this->_get = $key;
-
             return $this;
         }
-
         if (null === $key)
         {
-            // Act as a getter, all query strings
             return $this->_get;
         }
         elseif (null === $value)
         {
-            // Act as a getter, single query string
             return Arr::path($this->_get, $key);
         }
 
-        // Act as a setter, single query string
         $this->_get[$key] = $value;
-
         return $this;
     }
 
     /**
      * 读取或者设置post数据
      *
-     * @param  mixed  $key   Key or key value pairs to set
-     * @param  string $value Value to set to a key
-     * @return mixed
+     * @param  mixed  $key   键名
+     * @param  string $value 值
+     * @return mixed|$this
      */
     public function post($key = null, $value = null)
     {
@@ -956,8 +1021,8 @@ class Request extends Object implements RequestInterface
         {
             return Arr::path($this->_post, $key);
         }
-        $this->_post[$key] = $value;
 
+        $this->_post[$key] = $value;
         return $this;
     }
 
@@ -1004,9 +1069,7 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * @param string           $name
-     * @param string|\string[] $value
-     * @return $this
+     * @inheritdoc
      */
     public function withHeader($name, $value)
     {
@@ -1015,9 +1078,7 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * @param string           $name
-     * @param string|\string[] $value
-     * @return $this
+     * @inheritdoc
      */
     public function withAddedHeader($name, $value)
     {
@@ -1026,8 +1087,7 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * @param string $name
-     * @return $this
+     * @inheritdoc
      */
     public function withoutHeader($name)
     {
@@ -1036,8 +1096,7 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * @param \Psr\Http\Message\StreamInterface $body
-     * @return $this
+     * @inheritdoc
      */
     public function withBody(StreamInterface $body)
     {
@@ -1046,8 +1105,7 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * @param string $name
-     * @return $this|mixed|\tourze\Http\Request
+     * @inheritdoc
      */
     public function getHeader($name)
     {
@@ -1055,20 +1113,7 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * Retrieves the message's request target.
-     *
-     * Retrieves the message's request-target either as it will appear (for
-     * clients), as it appeared at request (for servers), or as it was
-     * specified for the instance (see withRequestTarget()).
-     *
-     * In most cases, this will be the origin-form of the composed URI,
-     * unless a value was provided to the concrete implementation (see
-     * withRequestTarget() below).
-     *
-     * If no URI is available, and no request-target has been specifically
-     * provided, this method MUST return the string "/".
-     *
-     * @return string
+     * @inheritdoc
      */
     public function getRequestTarget()
     {
@@ -1076,21 +1121,7 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * Return an instance with the specific request-target.
-     *
-     * If the request needs a non-origin-form request-target — e.g., for
-     * specifying an absolute-form, authority-form, or asterisk-form —
-     * this method may be used to create an instance with the specified
-     * request-target, verbatim.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * changed request target.
-     *
-     * @link http://tools.ietf.org/html/rfc7230#section-2.7 (for the various
-     *     request-target forms allowed in request messages)
-     * @param mixed $requestTarget
-     * @return self
+     * @inheritdoc
      */
     public function withRequestTarget($requestTarget)
     {
@@ -1099,19 +1130,7 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * Return an instance with the provided HTTP method.
-     *
-     * While HTTP method names are typically all uppercase characters, HTTP
-     * method names are case-sensitive and thus implementations SHOULD NOT
-     * modify the given string.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * changed request method.
-     *
-     * @param string $method Case-sensitive method.
-     * @return self
-     * @throws \InvalidArgumentException for invalid HTTP methods.
+     * @inheritdoc
      */
     public function withMethod($method)
     {
@@ -1120,34 +1139,7 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * Returns an instance with the provided URI.
-     *
-     * This method MUST update the Host header of the returned request by
-     * default if the URI contains a host component. If the URI does not
-     * contain a host component, any pre-existing Host header MUST be carried
-     * over to the returned request.
-     *
-     * You can opt-in to preserving the original state of the Host header by
-     * setting `$preserveHost` to `true`. When `$preserveHost` is set to
-     * `true`, this method interacts with the Host header in the following ways:
-     *
-     * - If the the Host header is missing or empty, and the new URI contains
-     *   a host component, this method MUST update the Host header in the returned
-     *   request.
-     * - If the Host header is missing or empty, and the new URI does not contain a
-     *   host component, this method MUST NOT update the Host header in the returned
-     *   request.
-     * - If a Host header is present and non-empty, this method MUST NOT update
-     *   the Host header in the returned request.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * new UriInterface instance.
-     *
-     * @link http://tools.ietf.org/html/rfc3986#section-4.3
-     * @param UriInterface $uri          New request URI to use.
-     * @param bool         $preserveHost Preserve the original state of the Host header.
-     * @return self
+     * @inheritdoc
      */
     public function withUri(UriInterface $uri, $preserveHost = false)
     {

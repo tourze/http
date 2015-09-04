@@ -29,49 +29,15 @@ abstract class RequestClient extends Object
     protected $_follow = false;
 
     /**
-     * @var array Headers to preserve when following a redirect
-     */
-    protected $_followHeaders = ['Authorization'];
-
-    /**
-     * @var bool Follow 302 redirect with original request method?
-     */
-    protected $_strictRedirect = true;
-
-    /**
-     * @var array Callbacks to use when response contains given headers
-     */
-    protected $_headerCallbacks = [
-        'Location' => 'tourze\Http\Request\RequestClient::onHeaderLocation'
-    ];
-
-    /**
-     * @var int header回调函数执行的最大次数
-     */
-    protected $_maxCallbackDepth = 5;
-
-    /**
-     * @var int 当前主请求的级别
-     */
-    protected $_callbackDepth = 1;
-
-    /**
-     * @var array 回调参数
-     */
-    protected $_callbackParams = [];
-
-    /**
      * @param bool $follow
-     * @return RequestClient
      */
     public function setFollow($follow)
     {
         $this->_follow = $follow;
-        return $this;
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function isFollow()
     {
@@ -79,13 +45,16 @@ abstract class RequestClient extends Object
     }
 
     /**
+     * @var array Headers to preserve when following a redirect
+     */
+    protected $_followHeaders = ['Authorization'];
+
+    /**
      * @param array $followHeaders
-     * @return RequestClient
      */
     public function setFollowHeaders($followHeaders)
     {
         $this->_followHeaders = $followHeaders;
-        return $this;
     }
 
     /**
@@ -97,17 +66,20 @@ abstract class RequestClient extends Object
     }
 
     /**
-     * @param boolean $strictRedirect
-     * @return RequestClient
+     * @var bool Follow 302 redirect with original request method?
+     */
+    protected $_strictRedirect = true;
+
+    /**
+     * @param bool $strictRedirect
      */
     public function setStrictRedirect($strictRedirect)
     {
         $this->_strictRedirect = $strictRedirect;
-        return $this;
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function isStrictRedirect()
     {
@@ -115,13 +87,18 @@ abstract class RequestClient extends Object
     }
 
     /**
+     * @var array Callbacks to use when response contains given headers
+     */
+    protected $_headerCallbacks = [
+        'Location' => 'tourze\Http\Request\RequestClient::onHeaderLocation'
+    ];
+
+    /**
      * @param array $headerCallbacks
-     * @return RequestClient
      */
     public function setHeaderCallbacks($headerCallbacks)
     {
         $this->_headerCallbacks = $headerCallbacks;
-        return $this;
     }
 
     /**
@@ -133,13 +110,16 @@ abstract class RequestClient extends Object
     }
 
     /**
+     * @var int header回调函数执行的最大次数
+     */
+    protected $_maxCallbackDepth = 5;
+
+    /**
      * @param int $maxCallbackDepth
-     * @return RequestClient
      */
     public function setMaxCallbackDepth($maxCallbackDepth)
     {
         $this->_maxCallbackDepth = $maxCallbackDepth;
-        return $this;
     }
 
     /**
@@ -151,13 +131,16 @@ abstract class RequestClient extends Object
     }
 
     /**
+     * @var int 当前主请求的级别
+     */
+    protected $_callbackDepth = 1;
+
+    /**
      * @param int $callbackDepth
-     * @return RequestClient
      */
     public function setCallbackDepth($callbackDepth)
     {
         $this->_callbackDepth = $callbackDepth;
-        return $this;
     }
 
     /**
@@ -169,13 +152,16 @@ abstract class RequestClient extends Object
     }
 
     /**
+     * @var array 回调参数
+     */
+    protected $_callbackParams = [];
+
+    /**
      * @param array $callbackParams
-     * @return RequestClient
      */
     public function setCallbackParams($callbackParams)
     {
         $this->_callbackParams = $callbackParams;
-        return $this;
     }
 
     /**
@@ -205,7 +191,9 @@ abstract class RequestClient extends Object
             ]);
         }
 
-        $origResponse = $response = Response::factory(['_protocol' => $request->protocol]);
+        $origResponse = $response = new Response([
+            'protocol' => $request->protocol
+        ]);
 
         $response = $this->executeRequest($request, $response);
 

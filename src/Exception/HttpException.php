@@ -16,13 +16,13 @@ class HttpException extends BaseException
 {
 
     /**
-     * Creates an HTTP_Exception of the specified type.
+     * 创建一个指定类型的HTTP异常类
      *
-     * @param   int       $code      the http status code
-     * @param   string    $message   status message, custom content to display with error
-     * @param   array     $variables translation variables
-     * @param   Exception $previous
-     * @return  HttpException
+     * @param  int       $code      the http status code
+     * @param  string    $message   status message, custom content to display with error
+     * @param  array     $variables translation variables
+     * @param  Exception $previous
+     * @return HttpException
      */
     public static function factory($code, $message = null, array $variables = null, Exception $previous = null)
     {
@@ -68,15 +68,15 @@ class HttpException extends BaseException
         parent::__construct($message, $variables, $code, $previous);
 
         // 准备一个response对象
-        $this->_response = Response::factory();
+        $this->_response = new Response;
         $this->_response->status = $this->_code;
     }
 
     /**
      * 保存当前请求对象
      *
-     * @param   Request $request Request object that triggered this exception.
-     * @return  HttpException
+     * @param  Request $request Request object that triggered this exception.
+     * @return HttpException
      */
     public function request(Request $request = null)
     {
@@ -89,7 +89,7 @@ class HttpException extends BaseException
     }
 
     /**
-     * Generate a Response for the current Exception
+     * 获取当前异常的输出
      */
     public function getResponse()
     {

@@ -6,7 +6,6 @@ use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use tourze\Base\Helper\Mime;
-use tourze\Base\Log;
 use tourze\Base\Object;
 use tourze\Base\Exception\BaseException;
 use tourze\Base\Helper\Arr;
@@ -17,36 +16,21 @@ use tourze\Http\Request\Exception\RequestException;
 /**
  * 请求响应对象
  *
+ * @property Message                message
+ * @property int                    status
+ * @property int                    contentLength
+ * @property string                 protocol
+ * @property array                  cookies
+ * @property StreamInterface|string body
  * @package tourze\Http
- * @property   Message                                  message
- * @property   int                                      status
- * @property   int                                      contentLength
- * @property   string                                   protocol
- * @property   \Psr\Http\Message\StreamInterface|string body
  */
 class Response extends Object implements ResponseInterface
 {
 
     /**
-     * 创建一个响应对象
-     *
-     * @param  array $config 配置信息
-     * @return $this
+     * @var static 保存当前的response
      */
-    public static function factory(array $config = [])
-    {
-        return new Response($config);
-    }
-
-    /**
-     * @var int The response http status
-     */
-    protected $_status = 200;
-
-    /**
-     * @var Message
-     */
-    protected $_message = null;
+    public static $current = null;
 
     /**
      * @inheritdoc
@@ -67,13 +51,16 @@ class Response extends Object implements ResponseInterface
     }
 
     /**
+     * @var Message 消息对象
+     */
+    protected $_message = null;
+
+    /**
      * @param Message $message
-     * @return Response
      */
     public function setMessage($message)
     {
         $this->_message = $message;
-        return $this;
     }
 
     /**
@@ -84,11 +71,23 @@ class Response extends Object implements ResponseInterface
         return $this->_message;
     }
 
+    /**
+     * @var int 返回的HTTP状态码
+     */
+    protected $_status = 200;
+
+    /**
+     * @return int
+     */
     protected function getStatus()
     {
         return $this->_status;
     }
 
+    /**
+     * @param int $status
+     * @throws BaseException
+     */
     protected function setStatus($status)
     {
         if (array_key_exists($status, Http::$text))
@@ -104,7 +103,7 @@ class Response extends Object implements ResponseInterface
     /**
      * 读取响应内容
      *
-     * @return \Psr\Http\Message\StreamInterface|string
+     * @return StreamInterface|string
      */
     public function getBody()
     {
@@ -114,39 +113,54 @@ class Response extends Object implements ResponseInterface
     /**
      * 设置响应内容
      *
-     * @param \Psr\Http\Message\StreamInterface|string $body
-     * @return $this
+     * @param StreamInterface|string $body
      */
     public function setBody($body)
     {
         $this->message->body = $body;
-        return $this;
     }
 
     /**
-     * @var  array       Cookies to be returned in the response
+     * @var array 要返回的cookie
      */
     protected $_cookies = [];
 
     /**
-     * @var  string      返回的协议字符串
+     * @return array
+     */
+    public function getCookies()
+    {
+        return $this->_cookies;
+    }
+
+    /**
+     * @param array $cookies
+     */
+    public function setCookies($cookies)
+    {
+        $this->_cookies = $cookies;
+    }
+
+    /**
+     * @var string 返回的协议字符串
      */
     protected $_protocol = 'HTTP/1.1';
 
+    /**
+     * @return string
+     */
     protected function getProtocol()
     {
         return $this->_protocol;
     }
 
+    /**
+     * @param string $protocol
+     */
     protected function setProtocol($protocol)
     {
         $this->_protocol = strtoupper($protocol);
     }
-
-    /**
-     * 保存当前的response
-     */
-    public static $current = null;
 
     /**
      * 输出网页内容
@@ -200,9 +214,9 @@ class Response extends Object implements ResponseInterface
     }
 
     /**
-     * Returns the length of the body for use with content header
+     * 返回输出的内容
      *
-     * @return  int
+     * @return int
      */
     public function getContentLength()
     {
@@ -212,21 +226,21 @@ class Response extends Object implements ResponseInterface
     /**
      * 设置或者读取cookie
      *
-     *     // Get the cookies set to the response
+     *     // 读取cookie
      *     $cookies = $response->cookie();
-     *     // Set a cookie to the response
+     *
+     *     // 写cookie
      *     $response->cookie('session', [
      *          'value' => $value,
      *          'expiration' => 12352234
      *     ]);
      *
-     * @param  mixed  $key   cookie name, or array of cookie values
-     * @param  string $value value to set to cookie
+     * @param  mixed  $key   cookie名
+     * @param  string $value cookie值
      * @return $this|mixed
      */
     public function cookie($key = null, $value = null)
     {
-        // Handle the get cookie calls
         if (null === $key)
         {
             return $this->_cookies;
@@ -236,7 +250,6 @@ class Response extends Object implements ResponseInterface
             return Arr::get($this->_cookies, $key);
         }
 
-        // Handle the set cookie calls
         if (is_array($key))
         {
             foreach ($key as $k => $v)
@@ -283,7 +296,7 @@ class Response extends Object implements ResponseInterface
      */
     public function deleteCookies()
     {
-        $this->_cookies = [];
+        $this->cookies = [];
         return $this;
     }
 
@@ -564,7 +577,7 @@ class Response extends Object implements ResponseInterface
             {
                 // Create a text version of the exception
                 $error = BaseException::text($e);
-                Log::error($error);
+                Base::getLog()->error($error);
                 // Do NOT display the exception, it will corrupt the output!
             }
         }
@@ -598,18 +611,18 @@ class Response extends Object implements ResponseInterface
         }
 
         // Prepare cookies
-        if ($this->_cookies)
+        if ($this->cookies)
         {
             if (extension_loaded('http'))
             {
-                $this->headers('set-cookie', http_build_cookie($this->_cookies));
+                $this->headers('set-cookie', http_build_cookie($this->cookies));
             }
             else
             {
                 $cookies = [];
 
                 // Parse each
-                foreach ($this->_cookies as $key => $value)
+                foreach ($this->cookies as $key => $value)
                 {
                     $string = $key . '=' . $value['value'] . '; expires=' . date('l, d M Y H:i:s T', $value['expiration']);
                     $cookies[] = $string;
