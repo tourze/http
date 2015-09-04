@@ -303,20 +303,25 @@ class Response extends Object implements ResponseInterface
     /**
      * 发送当前保存的header信息
      *
-     * @param  boolean  $replace  replace existing headers
-     * @param  callback $callback function to handle header output
+     * @param  bool     $replace  替换已经存在的header
+     * @param  callback $callback 是否自定义处理函数
      * @return $this
      */
     public function sendHeaders($replace = false, $callback = null)
     {
         $protocol = $this->protocol;
         $status = $this->status;
-
-        // Create the response header
-        $renderHeaders = [$protocol . ' ' . $status . ' ' . Arr::get(Http::$text, $status)];
-
-        // Get the headers array
+        $cookies = $this->cookie();
         $headers = $this->headers();
+
+        Base::getLog()->debug(__METHOD__ . ' begin to send header', [
+            'protocol' => $protocol,
+            'status'   => $status,
+            'header'   => $headers,
+            'cookie'   => $cookies,
+        ]);
+
+        $renderHeaders = [$protocol . ' ' . $status . ' ' . Arr::get(Http::$text, $status)];
 
         foreach ($headers as $header => $value)
         {
@@ -336,6 +341,7 @@ class Response extends Object implements ResponseInterface
             $renderHeaders[] = $header . ': ' . $value;
         }
 
+        // 默认content-type
         if ( ! isset($headers['content-type']))
         {
             $renderHeaders[] = 'Content-Type: ' . Base::$contentType . '; charset=' . Base::$charset;
@@ -346,7 +352,7 @@ class Response extends Object implements ResponseInterface
             $renderHeaders[] = 'X-Powered-By: ' . Base::version();
         }
 
-        if ($cookies = $this->cookie())
+        if ($cookies)
         {
             $renderHeaders['Set-Cookie'] = $cookies;
         }
@@ -380,6 +386,10 @@ class Response extends Object implements ResponseInterface
 
         foreach ($headers as $key => $line)
         {
+            Base::getLog()->debug(__METHOD__ . ' send headers to php', [
+                'k' => $key,
+                'v' => $line,
+            ]);
             if ($key == 'Set-Cookie' && is_array($line))
             {
                 // Send cookies
