@@ -407,10 +407,8 @@ class Response extends Object implements ResponseInterface
     }
 
     /**
-     * Send file download as the response. All execution will be halted when
-     * this method is called! Use true for the filename to send the current
-     * response as the file content. The third parameter allows the following
-     * options to be set:
+     * 通过HTTP发送文件，达到下载文件的效果
+     *
      * Type      | Option    | Description                        | Default Value
      * ----------|-----------|------------------------------------|--------------
      * `boolean` | inline    | Display inline instead of download | `false`
@@ -426,13 +424,10 @@ class Response extends Object implements ResponseInterface
      *     $response->body = $content;
      *     $response->sendFile(true, $filename);
      *
-     * [!!] No further processing can be done after this method is called!
-     *
-     * @param   string $filename filename with path, or true for the current response
-     * @param   string $download downloaded file name
-     * @param   array  $options  additional options
-     * @return  void
-     * @throws  BaseException
+     * @param  string $filename filename with path, or true for the current response
+     * @param  string $download downloaded file name
+     * @param  array  $options  additional options
+     * @throws BaseException
      */
     public function sendFile($filename, $download = null, array $options = null)
     {
@@ -542,11 +537,8 @@ class Response extends Object implements ResponseInterface
         // Manually stop execution
         ignore_user_abort(true);
 
-        if ( ! Base::$safeMode)
-        {
-            // Keep the script running forever
-            @set_time_limit(0);
-        }
+        $prevTimeLimit = ini_get('max_execution_time');
+        @set_time_limit(0);
 
         // Send data in 16kb blocks
         $block = 1024 * 16;
@@ -593,6 +585,7 @@ class Response extends Object implements ResponseInterface
         }
 
         // 停止执行
+        @set_time_limit($prevTimeLimit);
         Base::getHttp()->end();
     }
 
