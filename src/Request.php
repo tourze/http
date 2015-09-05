@@ -13,6 +13,7 @@ use tourze\Base\Base;
 use tourze\Http\Exception\HttpException;
 use tourze\Http\Request\Client\ExternalClient;
 use tourze\Http\Request\Client\InternalClient;
+use tourze\Http\Request\Exception\ClientRecursionException;
 use tourze\Http\Request\Exception\RequestException;
 use tourze\Http\Request\RequestClient;
 use tourze\Route\Route;
@@ -82,8 +83,6 @@ class Request extends Object implements RequestInterface
      *
      *     $request = Request::factory($uri);
      *
-     * If $cache parameter is set, the response for the request will attempt to be retrieved from the cache.
-     *
      * @param   bool|string $uri            URI
      * @param   array       $clientParams   注入到client中的参数
      * @param   array       $injectedRoutes 注入到路由中的参数，一般用于测试
@@ -93,7 +92,6 @@ class Request extends Object implements RequestInterface
     public static function factory($uri = true, $clientParams = [], $injectedRoutes = [])
     {
         $request = new Request($uri, $clientParams, $injectedRoutes);
-
         return $request;
     }
 
@@ -653,7 +651,7 @@ class Request extends Object implements RequestInterface
     protected $_initial = false;
 
     /**
-     * @return  boolean
+     * @return bool
      */
     public function isInitial()
     {
@@ -755,10 +753,10 @@ class Request extends Object implements RequestInterface
     /**
      * 执行请求
      *
-     * @return \tourze\Http\Response
-     * @throws \tourze\Http\Exception\HttpException
-     * @throws \tourze\Http\Request\Exception\ClientRecursionException
-     * @throws \tourze\Http\Request\Exception\RequestException
+     * @return Response
+     * @throws HttpException
+     * @throws ClientRecursionException
+     * @throws RequestException
      */
     public function execute()
     {

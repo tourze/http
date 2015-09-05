@@ -264,7 +264,7 @@ abstract class RequestClient extends Object
      * @param Request       $request
      * @param Response      $response
      * @param RequestClient $client
-     * @return  null|Request
+     * @return null|Request
      */
     public static function onHeaderLocation(Request $request, Response $response, RequestClient $client)
     {

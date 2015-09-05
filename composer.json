@@ -10,9 +10,9 @@
     }
   ],
   "require": {
+    "tourze/base": "^1.0",
+    "tourze/route": "^1.0",
     "psr/http-message": "^1.0",
-    "tourze/base": "dev-master",
-    "tourze/route": "dev-master",
     "rmccue/requests": "^1.6"
   },
   "require-dev": {

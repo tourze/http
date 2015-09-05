@@ -373,8 +373,8 @@ class Response extends Object implements ResponseInterface
     /**
      * 发送header信息
      *
-     * @param  array   $headers headers to send to php
-     * @param  boolean $replace replace existing headers
+     * @param  array $headers
+     * @param  bool  $replace
      * @return $this
      */
     protected function _sendHeadersToPhp(array $headers, $replace)
@@ -411,9 +411,9 @@ class Response extends Object implements ResponseInterface
      *
      * Type      | Option    | Description                        | Default Value
      * ----------|-----------|------------------------------------|--------------
-     * `boolean` | inline    | Display inline instead of download | `false`
+     * `bool`    | inline    | Display inline instead of download | `false`
      * `string`  | mime_type | Manual mime type                   | Automatic
-     * `boolean` | delete    | Delete the file after sending      | `false`
+     * `bool`    | delete    | Delete the file after sending      | `false`
      *
      * Download a file that already exists:
      *
@@ -590,22 +590,19 @@ class Response extends Object implements ResponseInterface
     }
 
     /**
-     * Renders the HTTP_Interaction to a string, producing
-     *
-     *  - Protocol
-     *  - Headers
-     *  - Body
+     * 渲染当前响应对象
      *
      * @return string
      */
     public function render()
     {
+        Base::getLog()->debug(__METHOD__ . ' render response object');
+
         if ( ! $this->headers('content-type'))
         {
             $this->headers('content-type', Base::$contentType . '; charset=' . Base::$charset);
         }
 
-        // Set the content length
         $this->headers('content-length', (string) $this->contentLength);
 
         if (Base::$expose)
@@ -613,7 +610,6 @@ class Response extends Object implements ResponseInterface
             $this->headers('user-agent', Base::version());
         }
 
-        // Prepare cookies
         if ($this->cookies)
         {
             if (extension_loaded('http'))
@@ -623,14 +619,11 @@ class Response extends Object implements ResponseInterface
             else
             {
                 $cookies = [];
-
-                // Parse each
                 foreach ($this->cookies as $key => $value)
                 {
                     $string = $key . '=' . $value['value'] . '; expires=' . date('l, d M Y H:i:s T', $value['expiration']);
                     $cookies[] = $string;
                 }
-
                 $this->headers('set-cookie', $cookies);
             }
         }
@@ -648,11 +641,10 @@ class Response extends Object implements ResponseInterface
     }
 
     /**
-     * Generate ETag
-     * Generates an ETag from the response ready to be returned
+     * 根据响应内容来生成E-Tag
      *
      * @throws RequestException
-     * @return String Generated ETag
+     * @return string
      */
     public function generateEtag()
     {
@@ -661,7 +653,6 @@ class Response extends Object implements ResponseInterface
             throw new RequestException('No response yet associated with request - cannot auto generate resource ETag');
         }
 
-        // Generate a unique hash for the response
         return '"' . sha1($this->render()) . '"';
     }
 
@@ -677,9 +668,7 @@ class Response extends Object implements ResponseInterface
             return false;
         }
 
-        // TODO, speed this up with the use of string functions.
         preg_match_all('/(-?[0-9]++(?:-(?![0-9]++))?)(?:-?([0-9]++))?/', $_SERVER['HTTP_RANGE'], $matches, PREG_SET_ORDER);
-
         return $matches[0];
     }
 
