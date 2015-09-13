@@ -2,7 +2,7 @@
   "name": "tourze/http",
   "description": "途者PHP框架-HTTP部分",
   "minimum-stability": "stable",
-  "license": "proprietary",
+  "license": "MIT",
   "authors": [
     {
       "name": "tourze",
