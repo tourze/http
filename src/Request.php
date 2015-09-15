@@ -16,6 +16,7 @@ use tourze\Http\Request\Client\InternalClient;
 use tourze\Http\Request\Exception\ClientRecursionException;
 use tourze\Http\Request\Exception\RequestException;
 use tourze\Http\Request\RequestClient;
+use tourze\Route\Entry;
 use tourze\Route\Route;
 use tourze\Base\Security\Valid;
 
@@ -23,7 +24,7 @@ use tourze\Base\Security\Valid;
  * 请求处理类
  *
  * @property RequestClient client
- * @property Route         route
+ * @property Entry         route
  * @property Message       message
  * @property array         routes
  * @property string        body
@@ -32,6 +33,7 @@ use tourze\Base\Security\Valid;
  * @property string        directory
  * @property string        method
  * @property string        protocol
+ * @property string        charset
  * @property bool          ajax
  * @property bool          secure
  * @property bool          initial
@@ -118,7 +120,7 @@ class Request extends Object implements RequestInterface
 
         $routes = (empty($routes)) ? Route::all() : $routes;
         Base::getLog()->debug(__METHOD__ . ' get route list for process route', [
-            'routes' => array_keys($routes)
+            'routes' => array_keys($routes),
         ]);
 
         $params = null;
@@ -128,7 +130,8 @@ class Request extends Object implements RequestInterface
                 'name'   => $name,
                 'method' => $request->method,
             ]);
-            /* @var $route Route */
+
+            /* @var $route Entry */
             if ($params = $route->matches($request->uri, $request->method))
             {
                 Base::getLog()->debug(__METHOD__ . ' matched route found', [
@@ -213,7 +216,9 @@ class Request extends Object implements RequestInterface
         if (Valid::url($uri))
         {
             // 为其创建一个路由
-            $this->route = new Route($uri);
+            $this->route = new Entry([
+                'uri' => $uri,
+            ]);
             $this->uri = $uri;
 
             if (0 === strpos($uri, 'https://'))
@@ -370,12 +375,12 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * @var Route 当前请求匹配到的路由
+     * @var Entry 当前请求匹配到的路由
      */
     protected $_route;
 
     /**
-     * @return Route
+     * @return Entry
      */
     protected function getRoute()
     {
@@ -383,9 +388,9 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * @param Route $route
+     * @param Entry $route
      */
-    protected function setRoute(Route $route)
+    protected function setRoute(Entry $route)
     {
         $this->_route = $route;
     }
@@ -559,6 +564,27 @@ class Request extends Object implements RequestInterface
     {
         $this->message->body = $body;
         return $this;
+    }
+
+    /**
+     * @var string 当前编码
+     */
+    protected $_charset = 'utf-8';
+
+    /**
+     * @return string
+     */
+    public function getCharset()
+    {
+        return $this->_charset;
+    }
+
+    /**
+     * @param string $charset
+     */
+    public function setCharset($charset)
+    {
+        $this->_charset = $charset;
     }
 
     /**
@@ -825,7 +851,7 @@ class Request extends Object implements RequestInterface
             }
         }
 
-        if ( ! $this->route instanceof Route)
+        if ( ! $this->route instanceof Entry)
         {
             $e = HttpException::factory(Http::NOT_FOUND, 'Unable to find a route to match the URI: :uri', [
                 ':uri' => $this->uri,
@@ -939,7 +965,7 @@ class Request extends Object implements RequestInterface
         }
         else
         {
-            $this->headers('content-type', 'application/x-www-form-urlencoded; charset=' . Base::$charset);
+            $this->headers('content-type', 'application/x-www-form-urlencoded; charset=' . $this->charset);
             $body = http_build_query($post, null, '&');
         }
 

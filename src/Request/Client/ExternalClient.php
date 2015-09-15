@@ -37,7 +37,7 @@ class ExternalClient extends RequestClient
         if ($post = $request->post())
         {
             $request->body = http_build_query($post, null, '&');
-            $request->headers('content-type', 'application/x-www-form-urlencoded; charset=' . Base::$charset);
+            $request->headers('content-type', 'application/x-www-form-urlencoded; charset=' . $request->charset);
         }
 
         // 如果需要暴露框架信息

@@ -20,6 +20,7 @@ use tourze\Http\Request\Exception\RequestException;
  * @property int                    status
  * @property int                    contentLength
  * @property string                 protocol
+ * @property string                 charset
  * @property array                  cookies
  * @property StreamInterface|string body
  * @package tourze\Http
@@ -118,6 +119,27 @@ class Response extends Object implements ResponseInterface
     public function setBody($body)
     {
         $this->message->body = $body;
+    }
+
+    /**
+     * @var string 当前编码
+     */
+    protected $_charset = 'utf-8';
+
+    /**
+     * @return string
+     */
+    public function getCharset()
+    {
+        return $this->_charset;
+    }
+
+    /**
+     * @param string $charset
+     */
+    public function setCharset($charset)
+    {
+        $this->_charset = $charset;
     }
 
     /**
@@ -344,7 +366,7 @@ class Response extends Object implements ResponseInterface
         // 默认content-type
         if ( ! isset($headers['content-type']))
         {
-            $renderHeaders[] = 'Content-Type: ' . Base::$contentType . '; charset=' . Base::$charset;
+            $renderHeaders[] = 'Content-Type: ' . Base::$contentType . '; charset=' . $this->charset;
         }
 
         if (Base::$expose && ! isset($headers['x-powered-by']))
@@ -600,7 +622,7 @@ class Response extends Object implements ResponseInterface
 
         if ( ! $this->headers('content-type'))
         {
-            $this->headers('content-type', Base::$contentType . '; charset=' . Base::$charset);
+            $this->headers('content-type', Base::$contentType . '; charset=' . $this->charset);
         }
 
         $this->headers('content-length', (string) $this->contentLength);
