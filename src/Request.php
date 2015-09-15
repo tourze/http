@@ -3,9 +3,7 @@
 namespace tourze\Http;
 
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
-use tourze\Base\Object;
 use tourze\Base\Exception\BaseException;
 use tourze\Base\Helper\Arr;
 use tourze\Base\Helper\Url;
@@ -25,15 +23,11 @@ use tourze\Base\Security\Valid;
  *
  * @property RequestClient client
  * @property Entry         route
- * @property Message       message
  * @property array         routes
- * @property string        body
  * @property string        controller
  * @property string        action
  * @property string        directory
  * @property string        method
- * @property string        protocol
- * @property string        charset
  * @property bool          ajax
  * @property bool          secure
  * @property bool          initial
@@ -44,12 +38,10 @@ use tourze\Base\Security\Valid;
  * @property array         params
  * @property array         get
  * @property array         post
- * @property array         cookies
  * @property array         persistRouteParams
- * @property int           contentLength
  * @package tourze\Http
  */
-class Request extends Object implements RequestInterface
+class Request extends Stream implements RequestInterface
 {
 
     /**
@@ -312,27 +304,6 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * @var string 协议字符串
-     */
-    protected $_protocol = 'HTTP/1.1';
-
-    /**
-     * @return string
-     */
-    protected function getProtocol()
-    {
-        return $this->_protocol;
-    }
-
-    /**
-     * @param string $protocol
-     */
-    protected function setProtocol($protocol)
-    {
-        $this->_protocol = strtoupper($protocol);
-    }
-
-    /**
      * @var bool 当前请求是否为安全连接
      */
     protected $_secure = false;
@@ -522,72 +493,6 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * @var null|Message
-     */
-    protected $_message = null;
-
-    /**
-     * @param null|Message $message
-     * @return Request
-     */
-    public function setMessage($message)
-    {
-        $this->_message = $message;
-        return $this;
-    }
-
-    /**
-     * @return null|Message
-     */
-    public function getMessage()
-    {
-        return $this->_message;
-    }
-
-    /**
-     * 读取当前的body内容
-     *
-     * @return string
-     */
-    public function getBody()
-    {
-        return $this->message->body;
-    }
-
-    /**
-     * 设置body内容
-     *
-     * @param string $body
-     * @return $this
-     */
-    public function setBody($body)
-    {
-        $this->message->body = $body;
-        return $this;
-    }
-
-    /**
-     * @var string 当前编码
-     */
-    protected $_charset = 'utf-8';
-
-    /**
-     * @return string
-     */
-    public function getCharset()
-    {
-        return $this->_charset;
-    }
-
-    /**
-     * @param string $charset
-     */
-    public function setCharset($charset)
-    {
-        $this->_charset = $charset;
-    }
-
-    /**
      * @var array 当前请求的路由参数
      */
     protected $_params = [];
@@ -648,27 +553,6 @@ class Request extends Object implements RequestInterface
     public function setPost($post)
     {
         $this->_post = $post;
-    }
-
-    /**
-     * @var array 要发送出来的cookie
-     */
-    protected $_cookies = [];
-
-    /**
-     * @return array
-     */
-    public function getCookies()
-    {
-        return $this->_cookies;
-    }
-
-    /**
-     * @param array $cookies
-     */
-    public function setCookies($cookies)
-    {
-        $this->_cookies = $cookies;
     }
 
     /**
@@ -943,16 +827,6 @@ class Request extends Object implements RequestInterface
     }
 
     /**
-     * 读取当前body的长度
-     *
-     * @return int
-     */
-    public function getContentLength()
-    {
-        return strlen($this->body);
-    }
-
-    /**
      * 渲染请求，保存：协议、头部、内容主体
      *
      * @return  string
@@ -1117,15 +991,6 @@ class Request extends Object implements RequestInterface
     public function withoutHeader($name)
     {
         $this->message->withoutHeader($name);
-        return $this;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function withBody(StreamInterface $body)
-    {
-        $this->message->withBody($body);
         return $this;
     }
 

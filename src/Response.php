@@ -4,9 +4,7 @@ namespace tourze\Http;
 
 use Exception;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 use tourze\Base\Helper\Mime;
-use tourze\Base\Object;
 use tourze\Base\Exception\BaseException;
 use tourze\Base\Helper\Arr;
 use tourze\Base\Helper\Cookie;
@@ -16,16 +14,10 @@ use tourze\Http\Request\Exception\RequestException;
 /**
  * 请求响应对象
  *
- * @property Message                message
- * @property int                    status
- * @property int                    contentLength
- * @property string                 protocol
- * @property string                 charset
- * @property array                  cookies
- * @property StreamInterface|string body
+ * @property int status
  * @package tourze\Http
  */
-class Response extends Object implements ResponseInterface
+class Response extends Stream implements ResponseInterface
 {
 
     /**
@@ -49,27 +41,6 @@ class Response extends Object implements ResponseInterface
     public function getHeader($name)
     {
         return $this->message->getHeader($name);
-    }
-
-    /**
-     * @var Message 消息对象
-     */
-    protected $_message = null;
-
-    /**
-     * @param Message $message
-     */
-    public function setMessage($message)
-    {
-        $this->_message = $message;
-    }
-
-    /**
-     * @return Message
-     */
-    public function getMessage()
-    {
-        return $this->_message;
     }
 
     /**
@@ -99,89 +70,6 @@ class Response extends Object implements ResponseInterface
         {
             throw new BaseException(__METHOD__ . ' unknown status value : :value', [':value' => $status]);
         }
-    }
-
-    /**
-     * 读取响应内容
-     *
-     * @return StreamInterface|string
-     */
-    public function getBody()
-    {
-        return $this->message->body;
-    }
-
-    /**
-     * 设置响应内容
-     *
-     * @param StreamInterface|string $body
-     */
-    public function setBody($body)
-    {
-        $this->message->body = $body;
-    }
-
-    /**
-     * @var string 当前编码
-     */
-    protected $_charset = 'utf-8';
-
-    /**
-     * @return string
-     */
-    public function getCharset()
-    {
-        return $this->_charset;
-    }
-
-    /**
-     * @param string $charset
-     */
-    public function setCharset($charset)
-    {
-        $this->_charset = $charset;
-    }
-
-    /**
-     * @var array 要返回的cookie
-     */
-    protected $_cookies = [];
-
-    /**
-     * @return array
-     */
-    public function getCookies()
-    {
-        return $this->_cookies;
-    }
-
-    /**
-     * @param array $cookies
-     */
-    public function setCookies($cookies)
-    {
-        $this->_cookies = $cookies;
-    }
-
-    /**
-     * @var string 返回的协议字符串
-     */
-    protected $_protocol = 'HTTP/1.1';
-
-    /**
-     * @return string
-     */
-    protected function getProtocol()
-    {
-        return $this->_protocol;
-    }
-
-    /**
-     * @param string $protocol
-     */
-    protected function setProtocol($protocol)
-    {
-        $this->_protocol = strtoupper($protocol);
     }
 
     /**
@@ -236,16 +124,6 @@ class Response extends Object implements ResponseInterface
     }
 
     /**
-     * 返回输出的内容
-     *
-     * @return int
-     */
-    public function getContentLength()
-    {
-        return strlen($this->body);
-    }
-
-    /**
      * 设置或者读取cookie
      *
      *     // 读取cookie
@@ -285,7 +163,7 @@ class Response extends Object implements ResponseInterface
             {
                 $value = [
                     'value'      => $value,
-                    'expiration' => Cookie::$expiration
+                    'expiration' => Cookie::$expiration,
                 ];
             }
             elseif ( ! isset($value['expiration']))
@@ -736,7 +614,7 @@ class Response extends Object implements ResponseInterface
 
         return [
             $start,
-            $end
+            $end,
         ];
     }
 
@@ -805,15 +683,6 @@ class Response extends Object implements ResponseInterface
     public function withoutHeader($name)
     {
         $this->message->withoutHeader($name);
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function withBody(StreamInterface $body)
-    {
-        $this->message->withBody($body);
         return $this;
     }
 
