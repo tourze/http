@@ -18,6 +18,9 @@ class RequestTest extends PHPUnit_Framework_TestCase
     public function testExecute()
     {
         $request = Request::factory('http://www.baidu.com');
+        //$request->method = Http::POST;
+        $request->query(['v1' => 'v2']);
+        //$request->post(['v3' => 'v4']);
         $response = $request->execute();
 
         $this->assertTrue(strpos($response->body, '百度') !== false);
