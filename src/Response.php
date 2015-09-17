@@ -241,9 +241,13 @@ class Response extends Stream implements ResponseInterface
             $renderHeaders[] = $header . ': ' . $value;
         }
 
-        // 默认content-type
-        if ( ! isset($headers['content-type']))
+        if (isset($headers['content-type']) || isset($headers['Content-Type']))
         {
+            // 已经有content-type了，这里就不做处理了
+        }
+        else
+        {
+            // 默认content-type
             $renderHeaders[] = 'Content-Type: ' . Base::$contentType . '; charset=' . $this->charset;
         }
 
@@ -287,12 +291,13 @@ class Response extends Stream implements ResponseInterface
         foreach ($headers as $key => $line)
         {
             Base::getLog()->debug(__METHOD__ . ' send headers to php', [
-                'k' => $key,
-                'v' => $line,
+                'key'   => $key,
+                'value' => $line,
             ]);
             if ($key == 'Set-Cookie' && is_array($line))
             {
-                // Send cookies
+                Base::getLog()->debug(__METHOD__ . ' set cookie headers', $line);
+
                 foreach ($line as $name => $value)
                 {
                     Cookie::set($name, $value['value'], $value['expiration']);
