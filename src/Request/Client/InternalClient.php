@@ -2,6 +2,7 @@
 
 namespace tourze\Http\Request\Client;
 
+use Doctrine\Common\Inflector\Inflector;
 use ReflectionClass;
 use tourze\Base\Base;
 use tourze\Base\Exception\BaseException;
@@ -35,7 +36,7 @@ class InternalClient extends RequestClient
 
         // 控制器
         $controller = $request->controller;
-        $className = $controller . $className;
+        $className = Inflector::classify($controller) . $className;
 
         // 目录
         $directory = $request->directory;
@@ -57,8 +58,11 @@ class InternalClient extends RequestClient
         {
             if ( ! class_exists($className))
             {
+                Base::getLog()->debug(__METHOD__ . ' class not found', [
+                    'class' => $className,
+                ]);
                 throw HttpException::factory(Http::NOT_FOUND, 'The requested URL :uri was not found on this server.', [
-                    ':uri' => $request->uri
+                    ':uri' => $request->uri,
                 ])->request($request);
             }
 
@@ -70,7 +74,7 @@ class InternalClient extends RequestClient
                     'class' => $className,
                 ]);
                 throw new BaseException('Cannot create instances of abstract :controller', [
-                    ':controller' => $className
+                    ':controller' => $className,
                 ]);
             }
 
