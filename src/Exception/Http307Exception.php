@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http307Exception extends RedirectException
 {
 
     /**
-     * @var   int    HTTP 307 Temporary Redirect
+     * @var int
      */
-    protected $_code = 307;
+    protected $_code = Http::TEMPORARY_REDIRECT;
 
 }

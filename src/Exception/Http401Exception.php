@@ -3,19 +3,20 @@
 namespace tourze\Http\Exception;
 
 use tourze\Base\Exception\BaseException;
+use tourze\Http\Http;
 
 class Http401Exception extends ExpectedException
 {
 
     /**
-     * @var   int    HTTP 401 Unauthorized
+     * @var int
      */
-    protected $_code = 401;
+    protected $_code = Http::UNAUTHORIZED;
 
     /**
-     * Specifies the WWW-Authenticate challenge.
+     * 指定基础认证的提示信息
      *
-     * @param  string $challenge WWW-Authenticate challenge (eg `Basic realm="Control Panel"`)
+     * @param  string $challenge 基础认证返回信息，如`Basic realm="Control Panel"`
      * @return $this
      */
     public function authenticate($challenge = null)
@@ -31,10 +32,7 @@ class Http401Exception extends ExpectedException
     }
 
     /**
-     * Validate this exception contains everything needed to continue.
-     *
-     * @throws BaseException
-     * @return bool
+     * {@inheritdoc}
      */
     public function check()
     {

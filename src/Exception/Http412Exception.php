@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Component\Http;
+
 class Http412Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 412 Precondition Failed
+     * @var int
      */
-    protected $_code = 412;
+    protected $_code = Http::PRECONDITION_FAILED;
 
 }

@@ -3,20 +3,18 @@
 namespace tourze\Http\Exception;
 
 use tourze\Base\Exception\BaseException;
+use tourze\Http\Http;
 
 class Http305Exception extends ExpectedException
 {
 
     /**
-     * @var   int    HTTP 305 Use Proxy
+     * @var int
      */
-    protected $_code = 305;
+    protected $_code = Http::USE_PROXY;
 
     /**
-     * Specifies the proxy to replay this request via
-     *
-     * @param null $uri
-     * @return $this
+     * {@inheritdoc}
      */
     public function location($uri = null)
     {
@@ -30,10 +28,7 @@ class Http305Exception extends ExpectedException
     }
 
     /**
-     * Validate this exception contains everything needed to continue.
-     *
-     * @throws BaseException
-     * @return bool
+     * {@inheritdoc}
      */
     public function check()
     {

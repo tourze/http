@@ -5,9 +5,9 @@ namespace tourze\Http\Request\Exception;
 use tourze\Base\Exception\BaseException;
 
 /**
- * @package    Base
- * @category   Exceptions
- * @author     YwiSax
+ * Class ClientRecursionException
+ *
+ * @package tourze\Http\Request\Exception
  */
 class ClientRecursionException extends BaseException
 {

@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http404Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 404 Not Found
+     * @var int
      */
-    protected $_code = 404;
+    protected $_code = Http::NOT_FOUND;
 
 }

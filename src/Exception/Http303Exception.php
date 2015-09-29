@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http303Exception extends RedirectException
 {
 
     /**
-     * @var   int    HTTP 303 See Other
+     * @var int
      */
-    protected $_code = 303;
+    protected $_code = Http::SEE_OTHER;
 
 }

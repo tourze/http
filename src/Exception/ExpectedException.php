@@ -2,7 +2,6 @@
 
 namespace tourze\Http\Exception;
 
-use tourze\Base\Exception\BaseException;
 use tourze\Http\Response;
 
 /**
@@ -14,12 +13,11 @@ abstract class ExpectedException extends HttpException
 {
 
     /**
-     * Gets and sets headers to the [Response].
+     * 设置header信息
      *
-     * @see     [Response::headers]
-     * @param   mixed  $key
-     * @param   string $value
-     * @return  mixed
+     * @param  mixed  $key
+     * @param  string $value
+     * @return mixed
      */
     public function headers($key = null, $value = null)
     {
@@ -39,10 +37,7 @@ abstract class ExpectedException extends HttpException
     }
 
     /**
-     * Validate this exception contains everything needed to continue.
-     *
-     * @throws BaseException
-     * @return bool
+     * {@inheritdoc}
      */
     public function check()
     {
@@ -50,10 +45,7 @@ abstract class ExpectedException extends HttpException
     }
 
     /**
-     * Generate a Response for the current Exception
-     *
-     * @uses   BaseException::response()
-     * @return Response
+     * {@inheritdoc}
      */
     public function getResponse()
     {

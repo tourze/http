@@ -18,15 +18,15 @@ class HttpException extends BaseException
     /**
      * 创建一个指定类型的HTTP异常类
      *
-     * @param  int       $code      the http status code
-     * @param  string    $message   status message, custom content to display with error
-     * @param  array     $variables translation variables
+     * @param  int       $code      状态码
+     * @param  string    $message   消息文本
+     * @param  array     $variables 消息文本的翻译变量
      * @param  Exception $previous
      * @return HttpException
      */
     public static function factory($code, $message = null, array $variables = null, Exception $previous = null)
     {
-        $class = 'tourze\Http\Exception\Http'.$code.'Exception';
+        $class = 'tourze\Http\Exception\Http' . $code . 'Exception';
 
         return new $class($message, $variables, $previous);
     }
@@ -42,7 +42,7 @@ class HttpException extends BaseException
     protected $_code = 0;
 
     /**
-     * @var  Request  Request instance that triggered this exception.
+     * @var Request 当前异常的请求实例
      */
     protected $_request;
 
@@ -52,12 +52,7 @@ class HttpException extends BaseException
     protected $_response;
 
     /**
-     * Creates a new translated exception.
-     *
-     * @param string    $message   status message, custom content to display with error
-     * @param array     $variables translation variables
-     * @param int       $code
-     * @param Exception $previous
+     * {@inheritdoc}
      */
     public function __construct($message = "", array $variables = null, $code = 0, Exception $previous = null)
     {
@@ -75,7 +70,7 @@ class HttpException extends BaseException
     /**
      * 保存当前请求对象
      *
-     * @param  Request $request Request object that triggered this exception.
+     * @param  Request $request
      * @return HttpException
      */
     public function request(Request $request = null)
@@ -93,7 +88,7 @@ class HttpException extends BaseException
      */
     public function getResponse()
     {
-        BaseException::response($this);
+        return BaseException::response($this);
     }
 
     /**

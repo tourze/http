@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http409Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 409 Conflict
+     * @var int
      */
-    protected $_code = 409;
+    protected $_code = Http::CONFLICT;
 
 }

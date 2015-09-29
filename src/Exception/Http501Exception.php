@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http501Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 501 Not Implemented
+     * @var int
      */
-    protected $_code = 501;
+    protected $_code = Http::NOT_IMPLEMENTED;
 
 }

@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http406Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 406 Not Acceptable
+     * @var int
      */
-    protected $_code = 406;
+    protected $_code = Http::NOT_ACCEPTABLE;
 
 }

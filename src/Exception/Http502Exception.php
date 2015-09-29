@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http502Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 502 Bad Gateway
+     * @var int
      */
-    protected $_code = 502;
+    protected $_code = Http::BAD_GATEWAY;
 
 }

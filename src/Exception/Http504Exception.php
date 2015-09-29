@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http504Exception extends ExpectedException
 {
 
     /**
-     * @var   int    HTTP 504 Gateway Timeout
+     * @var int
      */
-    protected $_code = 504;
+    protected $_code = Http::GATEWAY_TIMEOUT;
 
 }

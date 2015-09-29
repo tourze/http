@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http301Exception extends RedirectException
 {
 
     /**
-     * @var   int    HTTP 301 Moved Permanently
+     * @var int
      */
-    protected $_code = 301;
+    protected $_code = Http::MOVED_PERMANENTLY;
 
 }

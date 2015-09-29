@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http415Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 415 Unsupported Media Type
+     * @var int
      */
-    protected $_code = 415;
+    protected $_code = Http::UNSUPPORTED_MEDIA_TYPE;
 
 }

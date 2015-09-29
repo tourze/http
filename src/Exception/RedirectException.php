@@ -7,13 +7,9 @@ use tourze\Base\Helper\Url;
 use tourze\Base\Base;
 
 /**
- * Redirect HTTP exception class. Used for all [HTTP_Exception]'s where the status
- * code indicates a redirect.
- * Eg [HTTP_Exception_301], [HTTP_Exception_302] and most of the other 30x's
+ * 跳转使用异常来实现跳转
  *
- * @package    Base
- * @category   Exceptions
- * @author     YwiSax
+ * @package tourze\Http\Exception
  */
 abstract class RedirectException extends ExpectedException
 {
@@ -47,7 +43,7 @@ abstract class RedirectException extends ExpectedException
     }
 
     /**
-     * Validate this exception contains everything needed to continue.
+     * 校验是否有跳转地址了
      *
      * @throws BaseException
      * @return bool

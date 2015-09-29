@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http416Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 416 Request Range Not Satisfiable
+     * @var int
      */
-    protected $_code = 416;
+    protected $_code = Http::REQUESTED_RANGE_NOT_SATISFIABLE;
 
 }

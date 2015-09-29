@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http503Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 503 Service Unavailable
+     * @var int
      */
-    protected $_code = 503;
+    protected $_code = Http::SERVICE_UNAVAILABLE;
 
 }

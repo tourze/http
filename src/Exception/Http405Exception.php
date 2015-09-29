@@ -3,26 +3,27 @@
 namespace tourze\Http\Exception;
 
 use tourze\Base\Exception\BaseException;
+use tourze\Http\Http;
 
 class Http405Exception extends ExpectedException
 {
 
     /**
-     * @var   int    HTTP 405 Method Not Allowed
+     * @var int
      */
-    protected $_code = 405;
+    protected $_code = Http::METHOD_NOT_ALLOWED;
 
     /**
-     * Specifies the list of allowed HTTP methods
+     * 指定允许使用的方法列表
      *
-     * @param  array $methods List of allowed methods
+     * @param  array $methods 允许的方法列表
      * @return $this
      */
     public function allowed($methods)
     {
         if (is_array($methods))
         {
-            $methods = implode(',', $methods);
+            $methods = implode(', ', $methods);
         }
 
         $this->headers('allow', $methods);
@@ -31,10 +32,7 @@ class Http405Exception extends ExpectedException
     }
 
     /**
-     * Validate this exception contains everything needed to continue.
-     *
-     * @throws BaseException
-     * @return bool
+     * {@inheritdoc}
      */
     public function check()
     {

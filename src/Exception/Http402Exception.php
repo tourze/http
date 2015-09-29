@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http402Exception extends HttpException
 {
 
     /**
-     * @var   int    HTTP 402 Payment Required
+     * @var int
      */
-    protected $_code = 402;
+    protected $_code = Http::PAYMENT_REQUIRED;
 
 }

@@ -21,7 +21,7 @@ class Response extends Stream implements ResponseInterface
 {
 
     /**
-     * @var static 保存当前的response
+     * @var self 保存当前的response
      */
     public static $current = null;
 
@@ -87,10 +87,13 @@ class Response extends Stream implements ResponseInterface
      *
      *       // 获取指定头信息
      *       $accept = $response->headers('Content-Type');
+     *
      *       // 设置头信息
      *       $response->headers('Content-Type', 'text/html');
+     *
      *       // 获取所有头信息
      *       $headers = $response->headers();
+     *
      *       // 一次设置多个头信息
      *       $response->headers(['Content-Type' => 'text/html', 'Cache-Control' => 'no-cache']);
      *
@@ -314,34 +317,27 @@ class Response extends Stream implements ResponseInterface
     /**
      * 通过HTTP发送文件，达到下载文件的效果
      *
-     * Type      | Option    | Description                        | Default Value
-     * ----------|-----------|------------------------------------|--------------
-     * `bool`    | inline    | Display inline instead of download | `false`
-     * `string`  | mime_type | Manual mime type                   | Automatic
-     * `bool`    | delete    | Delete the file after sending      | `false`
+     *      // 下载一个已经存在的文件
+     *      $response->sendFile('media/packages/package.zip');
      *
-     * Download a file that already exists:
+     *      // 将返回内容当做是下载处理：
+     *      $response->body = $content;
+     *      $response->sendFile(true, $filename);
      *
-     *     $response->sendFile('media/packages/package.zip');
-     *
-     * Download generated content as a file:
-     *
-     *     $response->body = $content;
-     *     $response->sendFile(true, $filename);
-     *
-     * @param  string $filename filename with path, or true for the current response
-     * @param  string $download downloaded file name
-     * @param  array  $options  additional options
+     * @param  string $filename 文件名、文件路径，如果设置为`true`则返回当前的response内容
+     * @param  string $download 下载文件名，默认为当前要处理的文件名
+     * @param  array  $options  其他选项
      * @throws BaseException
      */
     public function sendFile($filename, $download = null, array $options = null)
     {
+        // 强制指定了mime
         if ( ! empty($options['mime_type']))
         {
-            // The mime-type has been manually set
             $mime = $options['mime_type'];
         }
 
+        // 返回当前的响应内容，作为本次下载
         if (true === $filename)
         {
             if (empty($download))
@@ -349,7 +345,6 @@ class Response extends Stream implements ResponseInterface
                 throw new BaseException('Download name must be provided for streaming files');
             }
 
-            // Temporary files will automatically be deleted
             $options['delete'] = false;
 
             if ( ! isset($mime))
@@ -358,42 +353,30 @@ class Response extends Stream implements ResponseInterface
                 $mime = Mime::getMimeFromExtension(strtolower(pathinfo($download, PATHINFO_EXTENSION)));
             }
 
-            // Force the data to be rendered if
+            // 将响应内容保存到临时文件
             $fileData = (string) $this->message->body;
-
-            // Get the content size
             $size = strlen($fileData);
-
-            // Create a temporary file to hold the current response
             $file = tmpfile();
-
-            // Write the current response into the file
             fwrite($file, $fileData);
 
-            // FileHelper data is no longer needed
             unset($fileData);
         }
         else
         {
-            // Get the complete file path
             $filename = realpath($filename);
 
             if (empty($download))
             {
-                // Use the file name as the download file name
                 $download = pathinfo($filename, PATHINFO_BASENAME);
             }
 
-            // Get the file size
             $size = filesize($filename);
 
             if ( ! isset($mime))
             {
-                // 根据扩展名，获取指定的mime类型
                 $mime = Mime::getMimeFromExtension(pathinfo($download, PATHINFO_EXTENSION));
             }
 
-            // Open the file for reading
             $file = fopen($filename, 'rb');
         }
 
@@ -404,10 +387,9 @@ class Response extends Stream implements ResponseInterface
             ]);
         }
 
-        // Inline or download?
-        $disposition = empty($options['inline']) ? 'attachment' : 'inline';
+        // inline和attachment的区别，主要在于浏览器遇到inline类型的下载时，会尝试直接在浏览器打开，而attachment则不会
+        $disposition = Arr::get($options, 'inline') ? 'inline' : 'attachment';
 
-        // Calculate byte range to download.
         $temp = $this->_calculateByteRange($size);
         $start = array_shift($temp);
         $end = array_shift($temp);
@@ -420,32 +402,29 @@ class Response extends Stream implements ResponseInterface
                 $this->status = 206;
             }
 
-            // Range of bytes being sent
             $this->headers('content-range', 'bytes ' . $start . '-' . $end . '/' . $size);
             $this->headers('accept-ranges', 'bytes');
         }
 
-        // Set the headers for a download
         $this->headers('content-disposition', $disposition . '; filename="' . $download . '"');
         $this->headers('content-type', $mime);
         $this->headers('content-length', (string) (($end - $start) + 1));
 
-        // Send all headers now
         $this->sendHeaders();
+
+        // @notice 此方法在cli环境下可能无效
 
         while (ob_get_level())
         {
-            // Flush all output buffers
             ob_end_flush();
         }
 
-        // Manually stop execution
         ignore_user_abort(true);
 
         $prevTimeLimit = ini_get('max_execution_time');
         @set_time_limit(0);
 
-        // Send data in 16kb blocks
+        // 16K
         $block = 1024 * 16;
 
         fseek($file, $start);
@@ -459,33 +438,25 @@ class Response extends Stream implements ResponseInterface
 
             if ($pos + $block > $end)
             {
-                // Don't read past the buffer.
                 $block = $end - $pos + 1;
             }
-
-            // Output a block of the file
             echo fread($file, $block);
-
-            // Send the data now
             flush();
         }
 
-        // Close the file
         fclose($file);
 
         if ( ! empty($options['delete']))
         {
             try
             {
-                // Attempt to remove the file
                 unlink($filename);
             }
             catch (Exception $e)
             {
-                // Create a text version of the exception
-                $error = BaseException::text($e);
-                Base::getLog()->error($error);
-                // Do NOT display the exception, it will corrupt the output!
+                Base::getLog()->error($e->getMessage(), [
+                    'code' => $e->getCode(),
+                ]);
             }
         }
 
@@ -568,53 +539,48 @@ class Response extends Stream implements ResponseInterface
      */
     protected function _parseByteRange()
     {
-        if ( ! isset($_SERVER['HTTP_RANGE']))
+        if ($httpRange = Arr::get($_SERVER, 'HTTP_RANGE'))
+        {
+            Base::getLog()->debug(__METHOD__ . ' get HTTP_RANGE', [
+                'string' => $httpRange,
+            ]);
+            preg_match_all('/(-?[0-9]++(?:-(?![0-9]++))?)(?:-?([0-9]++))?/', $httpRange, $matches, PREG_SET_ORDER);
+            return $matches[0];
+        }
+        else
         {
             return false;
         }
-
-        preg_match_all('/(-?[0-9]++(?:-(?![0-9]++))?)(?:-?([0-9]++))?/', $_SERVER['HTTP_RANGE'], $matches, PREG_SET_ORDER);
-        return $matches[0];
     }
 
     /**
-     * Calculates the byte range to use with send_file. If HTTP_RANGE does not exist then the complete byte range is returned
+     * 计算要发送的字节范围
      *
      * @param  int $size
      * @return array
      */
     protected function _calculateByteRange($size)
     {
-        // Defaults to start with when the HTTP_RANGE header doesn't exist.
         $start = 0;
         $end = $size - 1;
 
         if ($range = $this->_parseByteRange())
         {
-            // We have a byte range from HTTP_RANGE
-            $start = $range[1];
+            // HTTP_RANGE中读取数据
+            $start = Arr::get($range, 1, $start);
 
-            if ('-' === $start[0])
+            if ('-' === Arr::get($range, 0))
             {
-                // A negative value means we start from the end, so -500 would be the
-                // last 500 bytes.
+                // 负数表示返回从后面开始算起的字节数
                 $start = $size - abs($start);
             }
 
-            if (isset($range[2]))
-            {
-                // Set the end range
-                $end = $range[2];
-            }
+            $end = Arr::get($range, 2, $end);
         }
 
-        // Normalize values.
+        // 格式化数值，保证在范围内
         $start = abs(intval($start));
-
-        // Keep the the end value in bounds and normalize it.
         $end = min(abs(intval($end)), $size - 1);
-
-        // Keep the start in bounds.
         $start = ($end < $start) ? 0 : max($start, 0);
 
         return [

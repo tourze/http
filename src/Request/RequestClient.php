@@ -5,6 +5,7 @@ namespace tourze\Http\Request;
 use tourze\Base\Object;
 use tourze\Http\Http;
 use tourze\Http\Request;
+use tourze\Http\Request\Exception\RequestException;
 use tourze\Http\Response;
 use tourze\Http\Request\Exception\ClientRecursionException;
 
@@ -45,7 +46,7 @@ abstract class RequestClient extends Object
     }
 
     /**
-     * @var array Headers to preserve when following a redirect
+     * @var array 跳转之后，依然要保留的header信息
      */
     protected $_followHeaders = ['Authorization'];
 
@@ -66,7 +67,7 @@ abstract class RequestClient extends Object
     }
 
     /**
-     * @var bool Follow 302 redirect with original request method?
+     * @var bool 302重定向后依然使用之前的http方法？
      */
     protected $_strictRedirect = true;
 
@@ -87,10 +88,10 @@ abstract class RequestClient extends Object
     }
 
     /**
-     * @var array Callbacks to use when response contains given headers
+     * @var array 当请求带有指定的header信息时，自动执行回调函数
      */
     protected $_headerCallbacks = [
-        'Location' => 'tourze\Http\Request\RequestClient::onHeaderLocation'
+        'Location' => 'tourze\Http\Request\RequestClient::onHeaderLocation',
     ];
 
     /**
@@ -178,7 +179,7 @@ abstract class RequestClient extends Object
      * @param  Request $request
      * @return Response
      * @throws ClientRecursionException
-     * @throws Exception\RequestException
+     * @throws RequestException
      */
     public function execute(Request $request)
     {
@@ -192,7 +193,7 @@ abstract class RequestClient extends Object
         }
 
         $origResponse = $response = new Response([
-            'protocol' => $request->protocol
+            'protocol' => $request->protocol,
         ]);
 
         $response = $this->executeRequest($request, $response);
@@ -205,22 +206,18 @@ abstract class RequestClient extends Object
 
                 if ($callbackResult instanceof Request)
                 {
-                    // If the callback returns a request, automatically assign client params
                     $this->assignClientProperties($callbackResult->client);
                     $callbackResult
                         ->client
                         ->callbackDepth = $this->callbackDepth + 1;
 
-                    // Execute the request
                     $response = $callbackResult->execute();
                 }
                 elseif ($callbackResult instanceof Response)
                 {
-                    // Assign the returned response
                     $response = $callbackResult;
                 }
 
-                // If the callback has created a new response, do not process any further
                 if ($response !== $origResponse)
                 {
                     break;
@@ -241,8 +238,7 @@ abstract class RequestClient extends Object
     abstract public function executeRequest(Request $request, Response $response);
 
     /**
-     * Assigns the properties of the current RequestClient to another
-     * RequestClient instance - used when setting up a subsequent request.
+     * 复制client的信息
      *
      * @param RequestClient $client
      */
@@ -268,31 +264,28 @@ abstract class RequestClient extends Object
      */
     public static function onHeaderLocation(Request $request, Response $response, RequestClient $client)
     {
-        // Do we need to follow a Location header ?
         if ($client->follow
             && in_array($response->status, [
-                201,
-                301,
-                302,
-                303,
-                307
+                Http::CREATED,
+                Http::MOVED_PERMANENTLY,
+                Http::FOUND,
+                Http::SEE_OTHER,
+                Http::TEMPORARY_REDIRECT,
             ])
         )
         {
-            // Figure out which method to use for the follow request
             switch ($response->status)
             {
                 default:
-                case 301:
-                case 307:
+                case Http::MOVED_PERMANENTLY:
+                case Http::TEMPORARY_REDIRECT:
                     $followMethod = $request->method;
                     break;
-                case 201:
-                case 303:
+                case Http::CREATED:
+                case Http::SEE_OTHER:
                     $followMethod = Http::GET;
                     break;
-                case 302:
-                    // Cater for sites with broken HTTP redirect implementations
+                case Http::FOUND:
                     if ($client->strictRedirect)
                     {
                         $followMethod = $request->method;
@@ -304,8 +297,7 @@ abstract class RequestClient extends Object
                     break;
             }
 
-            // Prepare the additional request, copying any followHeaders that were present on the original request
-            $origHeaders = $request->headers()->getArrayCopy();
+            $origHeaders = $request->headers();
             $followHeaders = array_intersect_assoc($origHeaders, array_fill_keys($client->followHeaders, true));
 
             $followRequest = Request::factory($response->headers('Location'));

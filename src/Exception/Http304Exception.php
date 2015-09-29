@@ -2,12 +2,14 @@
 
 namespace tourze\Http\Exception;
 
+use tourze\Http\Http;
+
 class Http304Exception extends ExpectedException
 {
 
     /**
-     * @var   int    HTTP 304 Not Modified
+     * @var int
      */
-    protected $_code = 304;
+    protected $_code = Http::NOT_MODIFIED;
 
 }
