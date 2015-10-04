@@ -252,10 +252,7 @@ abstract class RequestClient extends Object
     }
 
     /**
-     * The default handler for following redirects, triggered by the presence of
-     * a Location header in the response.
-     * The client's follow property must be set true and the HTTP response status
-     * one of 201, 301, 302, 303 or 307 for the redirect to be followed.
+     * 跳转状态码的处理
      *
      * @param Request       $request
      * @param Response      $response
