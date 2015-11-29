@@ -12,17 +12,40 @@ use tourze\Http\Request\Exception\ClientRecursionException;
 /**
  * 请求的具体实现类，支持两种请求方式，一种是内部请求，一种是外部请求
  *
+ * @property array options
  * @property bool  follow
  * @property array followHeaders
  * @property bool  strictRedirect
  * @property array headerCallbacks
  * @property int   maxCallbackDepth
  * @property int   callbackDepth
+ * @property mixed callbackParams
  * @property array callbackParams
  * @package tourze\Http\Request
  */
 abstract class RequestClient extends Object
 {
+
+    /**
+     * @var array 用作透传的选项变量
+     */
+    protected $_options = [];
+
+    /**
+     * @return array
+     */
+    public function getOptions()
+    {
+        return $this->_options;
+    }
+
+    /**
+     * @param array $options
+     */
+    public function setOptions($options)
+    {
+        $this->_options = $options;
+    }
 
     /**
      * @var bool 如果返回header有跳转，是否继续跟随跳转
@@ -244,6 +267,7 @@ abstract class RequestClient extends Object
      */
     public function assignClientProperties(RequestClient $client)
     {
+        $client->options = $this->options;
         $client->follow = $this->follow;
         $client->followHeaders = $this->followHeaders;
         $client->headerCallbacks = $this->headerCallbacks;

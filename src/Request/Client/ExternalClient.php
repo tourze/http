@@ -75,7 +75,7 @@ class ExternalClient extends RequestClient
             }
 
             // 执行请求
-            $result = Requests::request($url, $sendHeaders, $request->body, $request->method);
+            $result = Requests::request($url, $sendHeaders, $request->body, $request->method, $this->options);
             if ( ! $result->success)
             {
                 throw new RequestException('Error fetching remote :url [ status :code ]', [
